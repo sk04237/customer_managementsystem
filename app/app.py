@@ -1,23 +1,15 @@
 from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
+from models import db, Customer  # インポートを修正
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///customers.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'your_secret_key'
 
-db = SQLAlchemy(app)
+db.init_app(app)
 
 main = Blueprint('main', __name__)
-
-class Customer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    phone = db.Column(db.String(15), nullable=False)
-
-    def __repr__(self):
-        return f'<Customer {self.name}>'
 
 # メニュー画面
 @main.route('/')
@@ -62,7 +54,7 @@ def add_customer():
 @main.route('/customers/import', methods=['GET', 'POST'])
 def import_customers():
     if request.method == 'POST':
-        file_path = 'data/customers.txt'
+        file_path = os.path.join(os.path.dirname(__file__), 'customers.txt')
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 for line in file:
