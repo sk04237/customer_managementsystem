@@ -1,5 +1,5 @@
 import os
-import sys  # 追加
+import sys  # アプリケーション終了に必要
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
@@ -113,8 +113,12 @@ def import_customers():
 @main.route('/shutdown', methods=['POST'])
 def shutdown():
     """アプリケーションを終了するエンドポイント"""
-    shutdown_func = request.environ.get('werkzeug.server.shutdown')
-    if shutdown_func is None:
-        raise RuntimeError('終了機能がサポートされていません。')
-    shutdown_func()
+    try:
+        shutdown_func = request.environ.get('werkzeug.server.shutdown')
+        if shutdown_func is None:
+            raise RuntimeError('終了機能がサポートされていません。')
+        shutdown_func()
+    except RuntimeError:
+        # サポートされていない場合でも安全に終了する
+        os._exit(0)
     return "アプリケーションを終了しました。"
