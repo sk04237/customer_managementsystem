@@ -9,7 +9,10 @@
     <ul>
         <li><a href="/customers">顧客一覧を見る</a></li>
         <li><a href="/customers/add">顧客を追加する</a></li>
+        <li><a href="/customers/import" onclick="event.preventDefault(); document.getElementById('import-form').submit();">顧客情報をインポート</a></li>
     </ul>
+
+    <form id="import-form" action="/customers/import" method="post" style="display: none;"></form>
 </body>
 </html>
 ```
