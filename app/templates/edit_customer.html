@@ -1,0 +1,23 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>顧客情報を編集</title>
+</head>
+<body>
+    <h1>顧客情報を編集</h1>
+    <form method="POST">
+        <label for="name">名前:</label>
+        <input type="text" id="name" name="name" value="{{ customer.name }}" required><br>
+
+        <label for="email">メールアドレス:</label>
+        <input type="email" id="email" name="email" value="{{ customer.email }}" required><br>
+
+        <label for="phone">電話番号:</label>
+        <input type="text" id="phone" name="phone" value="{{ customer.phone }}" required><br>
+
+        <button type="submit">保存</button>
+    </form>
+</body>
+</html>
+```
