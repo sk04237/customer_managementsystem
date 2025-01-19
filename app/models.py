@@ -1,4 +1,6 @@
-from . import db
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 # 顧客情報を保存するデータベースモデルを定義
 class Customer(db.Model):
