@@ -1,21 +1,21 @@
 ```python
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
+import os
 
-# ルートやビューを管理するためのBlueprintを作成
 main = Blueprint('main', __name__)
+
+data_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../data')
 
 @main.route('/')
 def menu():
     return render_template('menu.html')
 
-# 顧客情報を一覧表示するルート
 @main.route('/customers', methods=['GET'])
 def view_customers():
     customers = Customer.query.all()
     return render_template('view_customers.html', customers=customers)
 
-# 顧客情報を追加するルート
 @main.route('/customers/add', methods=['GET', 'POST'])
 def add_customer():
     if request.method == 'POST':
@@ -28,7 +28,6 @@ def add_customer():
         return redirect(url_for('main.view_customers'))
     return render_template('add_customer.html')
 
-# 顧客情報を編集するルート
 @main.route('/customers/edit/<int:id>', methods=['GET', 'POST'])
 def edit_customer(id):
     customer = Customer.query.get(id)
@@ -39,4 +38,22 @@ def edit_customer(id):
         db.session.commit()
         return redirect(url_for('main.view_customers'))
     return render_template('edit_customer.html', customer=customer)
+
+@main.route('/customers/import', methods=['POST'])
+def import_customers():
+    try:
+        file_path = os.path.join(data_folder, 'customers.txt')
+        with open(file_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue  # コメント行または空行は無視
+                name, email, phone = line.split(',')
+                new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
+                db.session.add(new_customer)
+            db.session.commit()
+        flash('顧客情報をインポートしました！', 'success')
+    except Exception as e:
+        flash(f'エラーが発生しました: {str(e)}', 'danger')
+    return redirect(url_for('main.view_customers'))
 ```
