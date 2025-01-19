@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>メニュー</title>
-</head>
-<body>
-    <h1>メニュー</h1>
-    <ul>
-        <li><a href="/customers">顧客一覧を見る</a></li>
-        <li><a href="/customers/add">顧客を追加する</a></li>
-        <li><a href="/customers/import">顧客情報をインポートする</a></li>
-    </ul>
-    <form method="POST" action="/shutdown" style="margin-top: 20px;">
-        <button type="submit">アプリケーションを終了する</button>
-    </form>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}メニュー{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">メニュー</h1>
+<div class="list-group">
+    <a href="/customers" class="list-group-item list-group-item-action">顧客一覧を見る</a>
+    <a href="/customers/add" class="list-group-item list-group-item-action">顧客を追加する</a>
+    <a href="/customers/import" class="list-group-item list-group-item-action">顧客情報をインポートする</a>
+</div>
+<form method="POST" action="/shutdown" class="mt-4">
+    <button type="submit" class="btn btn-danger">アプリケーションを終了する</button>
+</form>
+{% endblock %}
