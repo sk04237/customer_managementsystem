@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <title>顧客情報のインポート</title>
-</head>
-<body>
-    <h1>顧客情報のインポート</h1>
-    <form method="POST">
-        <button type="submit">インポートを実行</button>
-    </form>
-    <a href="/">メニューに戻る</a>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block title %}顧客情報のインポート{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">顧客情報のインポート</h1>
+<form method="POST" class="mt-3">
+    <button type="submit" class="btn btn-success">インポートを実行</button>
+</form>
+<a href="/" class="btn btn-secondary mt-3">メニューに戻る</a>
+{% endblock %}
