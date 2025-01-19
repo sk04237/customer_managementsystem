@@ -1,8 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from . import db  # 修正: 相対インポートに変更
 
-db = SQLAlchemy()
-
-# 顧客情報を保存するデータベースモデルを定義
 class Customer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
