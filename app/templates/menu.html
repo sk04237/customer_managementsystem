@@ -1,13 +1,15 @@
-{% extends "base.html" %}
-
-{% block title %}メニュー{% endblock %}
-
-{% block content %}
-<h1 class="mb-4">メニュー</h1>
-<ul class="list-group">
-    <li class="list-group-item"><a href="/customers">顧客一覧を見る</a></li>
-    <li class="list-group-item"><a href="/customers/add">顧客を追加する</a></li>
-    <li class="list-group-item"><a href="/customers/import" onclick="event.preventDefault(); document.getElementById('import-form').submit();">テキストファイルからインポート</a></li>
-</ul>
-<form id="import-form" action="/customers/import" method="post" style="display: none;"></form>
-{% endblock %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>メニュー</title>
+</head>
+<body>
+    <h1>メニュー</h1>
+    <ul>
+        <li><a href="/customers">顧客一覧を見る</a></li>
+        <li><a href="/customers/add">顧客を追加する</a></li>
+        <li><a href="/customers/import">顧客情報をインポートする</a></li>
+    </ul>
+</body>
+</html>
