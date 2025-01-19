@@ -1,6 +1,7 @@
 from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash
-from models import db, Customer  # インポートを修正
+from models import db, Customer
 import os
+import re
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///customers.db'
@@ -11,10 +12,13 @@ db.init_app(app)
 
 main = Blueprint('main', __name__)
 
+PHONE_REGEX = re.compile(r'^\d{10,15}$')
+EMAIL_REGEX = re.compile(r'^[\w\.-]+@[\w\.-]+\.\w+$')
+
 # メニュー画面
 @main.route('/')
 def home():
-    return render_template('menu.html')  # メニュー画面
+    return render_template('menu.html')
 
 # 顧客一覧を表示するエンドポイント
 @main.route('/customers', methods=['GET'])
@@ -30,18 +34,23 @@ def add_customer():
         email = request.form.get('email')
         phone = request.form.get('phone')
 
-        # 未入力チェック
         if not name or not email or not phone:
             flash('すべての項目を入力してください。', 'danger')
             return redirect(url_for('main.add_customer'))
 
-        # 重複チェック
+        if not PHONE_REGEX.match(phone):
+            flash('電話番号の形式が正しくありません。', 'danger')
+            return redirect(url_for('main.add_customer'))
+
+        if not EMAIL_REGEX.match(email):
+            flash('メールアドレスの形式が正しくありません。', 'danger')
+            return redirect(url_for('main.add_customer'))
+
         existing_customer = Customer.query.filter_by(email=email).first()
         if existing_customer:
             flash('同じメールアドレスの顧客がすでに存在します。', 'danger')
             return redirect(url_for('main.add_customer'))
 
-        # 新しい顧客をデータベースに追加
         new_customer = Customer(name=name, email=email, phone=phone)
         db.session.add(new_customer)
         db.session.commit()
@@ -50,11 +59,33 @@ def add_customer():
 
     return render_template('add_customer.html')
 
+# 顧客情報を編集するエンドポイント
+@main.route('/customers/edit/<int:customer_id>', methods=['GET', 'POST'])
+def edit_customer(customer_id):
+    customer = Customer.query.get_or_404(customer_id)
+    if request.method == 'POST':
+        customer.name = request.form.get('name')
+        customer.email = request.form.get('email')
+        customer.phone = request.form.get('phone')
+
+        if not PHONE_REGEX.match(customer.phone):
+            flash('電話番号の形式が正しくありません。', 'danger')
+            return redirect(url_for('main.edit_customer', customer_id=customer.id))
+
+        if not EMAIL_REGEX.match(customer.email):
+            flash('メールアドレスの形式が正しくありません。', 'danger')
+            return redirect(url_for('main.edit_customer', customer_id=customer.id))
+
+        db.session.commit()
+        flash('顧客情報を更新しました。', 'success')
+        return redirect(url_for('main.view_customers'))
+    return render_template('edit_customer.html', customer=customer)
+
 # 顧客情報をインポートするエンドポイント
 @main.route('/customers/import', methods=['GET', 'POST'])
 def import_customers():
     if request.method == 'POST':
-        file_path = os.path.join(os.path.dirname(__file__), 'customers.txt')
+        file_path = os.getenv('CUSTOMER_FILE_PATH', os.path.join(os.path.dirname(__file__), 'customers.txt'))
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 for line in file:
