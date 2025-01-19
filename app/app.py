@@ -1,7 +1,21 @@
+import os
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
 main = Blueprint('main', __name__)
+
+def export_customers_to_file():
+    """データベースの顧客情報をcustomers.txtに書き出す"""
+    file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')
+    try:
+        with open(file_path, 'w', encoding='utf-8') as file:
+            file.write("# 顧客情報フォーマット\n")
+            file.write("# 名前,メールアドレス,電話番号\n")
+            customers = Customer.query.all()
+            for customer in customers:
+                file.write(f"{customer.name},{customer.email},{customer.phone}\n")
+    except Exception as e:
+        print(f"エクスポート中にエラーが発生しました: {e}")
 
 # メニュー画面
 @main.route('/')
@@ -34,6 +48,7 @@ def add_customer():
         new_customer = Customer(name=name, email=email, phone=phone)
         db.session.add(new_customer)
         db.session.commit()
+        export_customers_to_file()  # ファイル書き出しを追加
         flash('顧客情報を追加しました。', 'success')
         return redirect(url_for('main.view_customers'))
 
@@ -53,25 +68,39 @@ def edit_customer(customer_id):
             return redirect(url_for('main.edit_customer', customer_id=customer.id))
 
         db.session.commit()
+        export_customers_to_file()  # ファイル書き出しを追加
         flash('顧客情報を更新しました。', 'success')
         return redirect(url_for('main.view_customers'))
 
     return render_template('edit_customer.html', customer=customer)
 
+# 顧客情報を削除するエンドポイント
+@main.route('/customers/delete/<int:customer_id>', methods=['POST'])
+def delete_customer(customer_id):
+    customer = Customer.query.get_or_404(customer_id)
+    db.session.delete(customer)
+    db.session.commit()
+    export_customers_to_file()  # ファイル書き出しを追加
+    flash('顧客情報を削除しました。', 'success')
+    return redirect(url_for('main.view_customers'))
+
 # 顧客情報をインポートするエンドポイント
 @main.route('/customers/import', methods=['GET', 'POST'])
 def import_customers():
     if request.method == 'POST':
-        file_path = 'customers.txt'
+        file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')  # 修正: パスを明示的に指定
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 for line in file:
                     if line.startswith('#') or not line.strip():
                         continue
-                    name, email, phone = line.strip().split(',')
-                    if not Customer.query.filter_by(email=email).first():
-                        new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
-                        db.session.add(new_customer)
+                    try:
+                        name, email, phone = line.strip().split(',')
+                        if not Customer.query.filter_by(email=email).first():
+                            new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
+                            db.session.add(new_customer)
+                    except ValueError:
+                        flash(f'無効なフォーマット: {line.strip()}', 'danger')  # 行フォーマットエラー
             db.session.commit()
             flash('顧客情報をインポートしました。', 'success')
         except Exception as e:
