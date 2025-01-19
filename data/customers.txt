@@ -1,0 +1,5 @@
+# 顧客情報フォーマット
+# 名前,メールアドレス,電話番号
+山田太郎,yamada@example.com,09012345678
+鈴木花子,suzuki@example.com,08098765432
+田中一郎,tanaka@example.com,07011223344
