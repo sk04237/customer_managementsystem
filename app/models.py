@@ -1,4 +1,3 @@
-```python
 from . import db
 
 # 顧客情報を保存するデータベースモデルを定義
@@ -10,4 +9,3 @@ class Customer(db.Model):
 
     def __repr__(self):
         return f'<Customer {self.name}>'
-```
