@@ -1,0 +1,31 @@
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>顧客一覧</title>
+</head>
+<body>
+    <h1>顧客一覧</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>名前</th>
+            <th>メールアドレス</th>
+            <th>電話番号</th>
+            <th>操作</th>
+        </tr>
+        {% for customer in customers %}
+        <tr>
+            <td>{{ customer.id }}</td>
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.email }}</td>
+            <td>{{ customer.phone }}</td>
+            <td>
+                <a href="/customers/edit/{{ customer.id }}">編集</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+```
