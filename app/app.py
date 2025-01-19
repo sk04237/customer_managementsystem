@@ -23,37 +23,31 @@ class Customer(db.Model):
 def home():
     return render_template('menu.html')  # メニュー画面
 
-@main.route('/customers/add', methods=['GET', 'POST'])
-def add_customer():
-    if request.method == 'POST':
-        name = request.form.get('name')
-        email = request.form.get('email')
-        phone = request.form.get('phone')
-
-        # 未入力チェック
-        if not name or not email or not phone:
-            flash('すべての項目を入力してください。', 'danger')
-            return redirect(url_for('main.add_customer'))
-
-        # 重複チェック
-        existing_customer = Customer.query.filter_by(email=email).first()
-        if existing_customer:
-            flash('同じメールアドレスの顧客がすでに存在します。', 'danger')
-            return redirect(url_for('main.add_customer'))
-
-        # 新しい顧客をデータベースに追加
-        new_customer = Customer(name=name, email=email, phone=phone)
-        db.session.add(new_customer)
-        db.session.commit()
-        flash('顧客情報を追加しました。', 'success')
-        return redirect(url_for('main.view_customers'))
-
-    return render_template('add_customer.html')
-
 @main.route('/customers', methods=['GET'])
 def view_customers():
     customers = Customer.query.all()
     return render_template('view_customers.html', customers=customers)
+
+@main.route('/customers/import', methods=['GET', 'POST'])
+def import_customers():
+    if request.method == 'POST':
+        # テキストファイルからインポート
+        file_path = 'data/customers.txt'
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.startswith('#') or not line.strip():
+                        continue
+                    name, email, phone = line.strip().split(',')
+                    if not Customer.query.filter_by(email=email).first():
+                        new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
+                        db.session.add(new_customer)
+            db.session.commit()
+            flash('顧客情報をインポートしました。', 'success')
+        except Exception as e:
+            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
+        return redirect(url_for('main.view_customers'))
+    return render_template('import_customers.html')
 
 app.register_blueprint(main)
 
