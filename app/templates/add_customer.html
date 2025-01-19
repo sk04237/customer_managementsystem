@@ -4,6 +4,15 @@
 
 {% block content %}
 <h1 class="mb-4">顧客追加</h1>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ category }}" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 <form method="POST" class="needs-validation" novalidate>
     <div class="mb-3">
         <label for="name" class="form-label">名前</label>
@@ -18,6 +27,6 @@
         <input type="text" id="phone" name="phone" class="form-control" required>
     </div>
     <button type="submit" class="btn btn-success">追加</button>
-    <a href="/" class="btn btn-secondary">メニューに戻る</a>
+    <a href="/customers" class="btn btn-secondary">顧客一覧に戻る</a>
 </form>
 {% endblock %}
