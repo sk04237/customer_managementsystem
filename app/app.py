@@ -1,4 +1,5 @@
 import os
+import sys  # 追加
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
@@ -48,7 +49,7 @@ def add_customer():
         new_customer = Customer(name=name, email=email, phone=phone)
         db.session.add(new_customer)
         db.session.commit()
-        export_customers_to_file()  # ファイル書き出しを追加
+        export_customers_to_file()
         flash('顧客情報を追加しました。', 'success')
         return redirect(url_for('main.view_customers'))
 
@@ -68,7 +69,7 @@ def edit_customer(customer_id):
             return redirect(url_for('main.edit_customer', customer_id=customer.id))
 
         db.session.commit()
-        export_customers_to_file()  # ファイル書き出しを追加
+        export_customers_to_file()
         flash('顧客情報を更新しました。', 'success')
         return redirect(url_for('main.view_customers'))
 
@@ -80,7 +81,7 @@ def delete_customer(customer_id):
     customer = Customer.query.get_or_404(customer_id)
     db.session.delete(customer)
     db.session.commit()
-    export_customers_to_file()  # ファイル書き出しを追加
+    export_customers_to_file()
     flash('顧客情報を削除しました。', 'success')
     return redirect(url_for('main.view_customers'))
 
@@ -88,7 +89,7 @@ def delete_customer(customer_id):
 @main.route('/customers/import', methods=['GET', 'POST'])
 def import_customers():
     if request.method == 'POST':
-        file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')  # 修正: パスを明示的に指定
+        file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')
         try:
             with open(file_path, 'r', encoding='utf-8') as file:
                 for line in file:
@@ -100,10 +101,20 @@ def import_customers():
                             new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
                             db.session.add(new_customer)
                     except ValueError:
-                        flash(f'無効なフォーマット: {line.strip()}', 'danger')  # 行フォーマットエラー
+                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
             db.session.commit()
             flash('顧客情報をインポートしました。', 'success')
         except Exception as e:
             flash(f'インポート中にエラーが発生しました: {e}', 'danger')
         return redirect(url_for('main.view_customers'))
     return render_template('import_customers.html')
+
+# アプリケーション終了エンドポイント
+@main.route('/shutdown', methods=['POST'])
+def shutdown():
+    """アプリケーションを終了するエンドポイント"""
+    shutdown_func = request.environ.get('werkzeug.server.shutdown')
+    if shutdown_func is None:
+        raise RuntimeError('終了機能がサポートされていません。')
+    shutdown_func()
+    return "アプリケーションを終了しました。"
