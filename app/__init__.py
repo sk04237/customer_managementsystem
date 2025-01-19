@@ -1,4 +1,3 @@
-```python
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
@@ -24,4 +23,3 @@ def create_app():
         db.create_all()
 
     return app
-```
