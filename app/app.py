@@ -19,6 +19,10 @@ class Customer(db.Model):
     def __repr__(self):
         return f'<Customer {self.name}>'
 
+@main.route('/')
+def home():
+    return render_template('menu.html')  # メニュー画面
+
 @main.route('/customers/add', methods=['GET', 'POST'])
 def add_customer():
     if request.method == 'POST':
