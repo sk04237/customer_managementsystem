@@ -55,6 +55,19 @@ def add_customer():
 
     return render_template('add_customer.html')
 
+@app.route('/search_customers', methods=['GET'])
+def search_customers():
+    query = request.args.get('query')  # ユーザー入力を取得
+    if query:
+        results = Customer.query.filter(
+            (Customer.name.ilike(f'%{query}%')) | 
+            (Customer.id.ilike(f'%{query}%'))
+        ).all()  # 部分一致で検索
+    else:
+        results = []
+
+    return render_template('view_customers.html', customers=results)
+
 # 顧客情報を編集するエンドポイント
 @main.route('/customers/edit/<int:customer_id>', methods=['GET', 'POST'])
 def edit_customer(customer_id):
