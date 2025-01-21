@@ -1,12 +1,13 @@
 import os
-import sys  # アプリケーション終了に必要
+import sys
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
+# Blueprint を定義
 main = Blueprint('main', __name__)
 
 def export_customers_to_file():
-    """データベースの顧客情報をcustomers.txtに書き出す"""
+    """データベースの顧客情報を customers.txt に書き出す"""
     file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')
     try:
         with open(file_path, 'w', encoding='utf-8') as file:
@@ -55,14 +56,16 @@ def add_customer():
 
     return render_template('add_customer.html')
 
-@app.route('/search_customers', methods=['GET'])
+# 検索機能エンドポイント
+@main.route('/search_customers', methods=['GET'])
 def search_customers():
-    query = request.args.get('query')  # ユーザー入力を取得
+    query = request.args.get('query')
     if query:
         results = Customer.query.filter(
             (Customer.name.ilike(f'%{query}%')) | 
-            (Customer.id.ilike(f'%{query}%'))
-        ).all()  # 部分一致で検索
+            (Customer.email.ilike(f'%{query}%')) |
+            (Customer.phone.ilike(f'%{query}%'))
+        ).all()
     else:
         results = []
 
@@ -125,13 +128,11 @@ def import_customers():
 # アプリケーション終了エンドポイント
 @main.route('/shutdown', methods=['POST'])
 def shutdown():
-    """アプリケーションを終了するエンドポイント"""
     try:
         shutdown_func = request.environ.get('werkzeug.server.shutdown')
         if shutdown_func is None:
             raise RuntimeError('終了機能がサポートされていません。')
         shutdown_func()
     except RuntimeError:
-        # サポートされていない場合でも安全に終了する
         os._exit(0)
     return "アプリケーションを終了しました。"
