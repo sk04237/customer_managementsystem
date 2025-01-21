@@ -1,20 +1,26 @@
 {% extends "base.html" %}
+
+{% block title %}顧客一覧{% endblock %}
+
 {% block content %}
 <h1>顧客一覧</h1>
 
 <!-- 検索フォーム -->
-<form method="GET" action="/search_customers">
-    <input type="text" name="query" placeholder="顧客名、メール、電話番号を入力" required>
-    <button type="submit">検索</button>
+<form method="GET" action="/search_customers" class="mb-4">
+    <div class="input-group">
+        <input type="text" name="query" class="form-control" placeholder="顧客名、メール、電話番号を入力" required>
+        <button type="submit" class="btn btn-primary">検索</button>
+    </div>
 </form>
 
-<table>
+<table class="table table-striped">
     <thead>
         <tr>
             <th>ID</th>
             <th>名前</th>
             <th>メールアドレス</th>
             <th>電話番号</th>
+            <th>操作</th>
         </tr>
     </thead>
     <tbody>
@@ -24,12 +30,16 @@
             <td>{{ customer.name }}</td>
             <td>{{ customer.email }}</td>
             <td>{{ customer.phone }}</td>
+            <td>
+                <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" class="btn btn-sm btn-warning">編集</a>
+                <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-danger">削除</button>
+                </form>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-{% endblock %}
 
-</table>
 <a href="/" class="btn btn-secondary">メニューに戻る</a>
 {% endblock %}
