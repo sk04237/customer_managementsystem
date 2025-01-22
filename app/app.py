@@ -1,5 +1,5 @@
 import os
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app as app
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
 # Blueprint を定義
@@ -137,21 +137,12 @@ def import_customers():
 @main.route('/shutdown', methods=['POST'])
 def shutdown():
     """
-    サーバーを終了するエンドポイント。
-    運用環境では直接停止するのではなく、メッセージを返すのみ。
+    サーバーを強制終了するエンドポイント。
     """
-    env = app.config.get("ENV", "production")
-    
-    if env == "production":
-        flash('運用環境ではこの操作はサポートされていません。', 'danger')
+    try:
+        os._exit(0)  # プロセスを強制終了
+    except Exception as e:
+        flash(f'終了時にエラーが発生しました: {e}', 'danger')
         return redirect(url_for('main.home'))
     
-    try:
-        shutdown_func = request.environ.get('werkzeug.server.shutdown')
-        if shutdown_func is None:
-            raise RuntimeError('終了機能がサポートされていません。')
-        shutdown_func()
-        flash('アプリケーションを終了しました。', 'success')
-    except RuntimeError:
-        os._exit(0)  # 強制終了（デバッグモードでのみ使用）
     return "アプリケーションを終了しました。"
