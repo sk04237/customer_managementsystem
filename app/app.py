@@ -1,5 +1,4 @@
 import os
-import sys
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
@@ -12,10 +11,10 @@ def export_customers_to_file():
     try:
         with open(file_path, 'w', encoding='utf-8') as file:
             file.write("# 顧客情報フォーマット\n")
-            file.write("# 名前,メールアドレス,電話番号\n")
+            file.write("# 名前,メールアドレス,電話番号,会社名\n")
             customers = Customer.query.all()
             for customer in customers:
-                file.write(f"{customer.name},{customer.email},{customer.phone}\n")
+                file.write(f"{customer.name},{customer.email},{customer.phone},{customer.company or ''}\n")
     except Exception as e:
         print(f"エクスポート中にエラーが発生しました: {e}")
 
@@ -27,8 +26,13 @@ def home():
 # 顧客一覧を表示するエンドポイント
 @main.route('/customers', methods=['GET'])
 def view_customers():
-    customers = Customer.query.all()
-    return render_template('view_customers.html', customers=customers)
+    sort_by = request.args.get('sort_by', 'id')  # デフォルトでID順
+    sort_order = request.args.get('sort_order', 'asc')  # 昇順または降順
+    if sort_order == 'asc':
+        customers = Customer.query.order_by(getattr(Customer, sort_by).asc()).all()
+    else:
+        customers = Customer.query.order_by(getattr(Customer, sort_by).desc()).all()
+    return render_template('view_customers.html', customers=customers, sort_by=sort_by, sort_order=sort_order)
 
 # 顧客情報を追加するエンドポイント
 @main.route('/customers/add', methods=['GET', 'POST'])
@@ -37,6 +41,7 @@ def add_customer():
         name = request.form.get('name')
         email = request.form.get('email')
         phone = request.form.get('phone')
+        company = request.form.get('company')
 
         if not name or not email or not phone:
             flash('すべての項目を入力してください。', 'danger')
@@ -47,7 +52,7 @@ def add_customer():
             flash('同じメールアドレスの顧客がすでに存在します。', 'danger')
             return redirect(url_for('main.add_customer'))
 
-        new_customer = Customer(name=name, email=email, phone=phone)
+        new_customer = Customer(name=name, email=email, phone=phone, company=company)
         db.session.add(new_customer)
         db.session.commit()
         export_customers_to_file()
@@ -64,7 +69,8 @@ def search_customers():
         results = Customer.query.filter(
             (Customer.name.ilike(f'%{query}%')) | 
             (Customer.email.ilike(f'%{query}%')) |
-            (Customer.phone.ilike(f'%{query}%'))
+            (Customer.phone.ilike(f'%{query}%')) |
+            (Customer.company.ilike(f'%{query}%'))
         ).all()
     else:
         results = []
@@ -79,6 +85,7 @@ def edit_customer(customer_id):
         customer.name = request.form.get('name')
         customer.email = request.form.get('email')
         customer.phone = request.form.get('phone')
+        customer.company = request.form.get('company')
 
         if not customer.name or not customer.email or not customer.phone:
             flash('すべての項目を入力してください。', 'danger')
@@ -112,9 +119,10 @@ def import_customers():
                     if line.startswith('#') or not line.strip():
                         continue
                     try:
-                        name, email, phone = line.strip().split(',')
+                        name, email, phone, *company = line.strip().split(',')
+                        company = company[0] if company else None
                         if not Customer.query.filter_by(email=email).first():
-                            new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip())
+                            new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip(), company=company)
                             db.session.add(new_customer)
                     except ValueError:
                         flash(f'無効なフォーマット: {line.strip()}', 'danger')
@@ -128,11 +136,8 @@ def import_customers():
 # アプリケーション終了エンドポイント
 @main.route('/shutdown', methods=['POST'])
 def shutdown():
-    try:
-        shutdown_func = request.environ.get('werkzeug.server.shutdown')
-        if shutdown_func is None:
-            raise RuntimeError('終了機能がサポートされていません。')
-        shutdown_func()
-    except RuntimeError:
-        os._exit(0)
+    shutdown_func = request.environ.get('werkzeug.server.shutdown')
+    if shutdown_func is None:
+        raise RuntimeError('終了機能がサポートされていません。')
+    shutdown_func()
     return "アプリケーションを終了しました。"
