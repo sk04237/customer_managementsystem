@@ -28,10 +28,20 @@ def home():
 def view_customers():
     sort_by = request.args.get('sort_by', 'id')  # デフォルトでID順
     sort_order = request.args.get('sort_order', 'asc')  # 昇順または降順
-    if sort_order == 'asc':
-        customers = Customer.query.order_by(getattr(Customer, sort_by).asc()).all()
+
+    if sort_by == 'name':
+        # 名前で五十音順にソート
+        if sort_order == 'asc':
+            customers = Customer.query.order_by(Customer.name.collate('NOCASE').asc()).all()
+        else:
+            customers = Customer.query.order_by(Customer.name.collate('NOCASE').desc()).all()
     else:
-        customers = Customer.query.order_by(getattr(Customer, sort_by).desc()).all()
+        # 他のカラムでのソート
+        if sort_order == 'asc':
+            customers = Customer.query.order_by(getattr(Customer, sort_by).asc()).all()
+        else:
+            customers = Customer.query.order_by(getattr(Customer, sort_by).desc()).all()
+
     return render_template('view_customers.html', customers=customers, sort_by=sort_by, sort_order=sort_order)
 
 # 顧客情報を追加するエンドポイント
