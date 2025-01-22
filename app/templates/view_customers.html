@@ -8,7 +8,7 @@
 <!-- 検索フォーム -->
 <form method="GET" action="/search_customers" class="mb-4">
     <div class="input-group">
-        <input type="text" name="query" class="form-control" placeholder="顧客名、メール、電話番号を入力" required>
+        <input type="text" name="query" class="form-control" placeholder="顧客名、メール、電話番号、会社名を入力" required>
         <button type="submit" class="btn btn-primary">検索</button>
     </div>
 </form>
@@ -16,10 +16,11 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th>ID</th>
-            <th>名前</th>
-            <th>メールアドレス</th>
-            <th>電話番号</th>
+            <th><a href="?sort_by=id&sort_order={{ 'desc' if sort_by == 'id' and sort_order == 'asc' else 'asc' }}">ID</a></th>
+            <th><a href="?sort_by=name&sort_order={{ 'desc' if sort_by == 'name' and sort_order == 'asc' else 'asc' }}">名前</a></th>
+            <th><a href="?sort_by=email&sort_order={{ 'desc' if sort_by == 'email' and sort_order == 'asc' else 'asc' }}">メールアドレス</a></th>
+            <th><a href="?sort_by=phone&sort_order={{ 'desc' if sort_by == 'phone' and sort_order == 'asc' else 'asc' }}">電話番号</a></th>
+            <th><a href="?sort_by=company&sort_order={{ 'desc' if sort_by == 'company' and sort_order == 'asc' else 'asc' }}">会社名</a></th>
             <th>操作</th>
         </tr>
     </thead>
@@ -30,6 +31,7 @@
             <td>{{ customer.name }}</td>
             <td>{{ customer.email }}</td>
             <td>{{ customer.phone }}</td>
+            <td>{{ customer.company }}</td>
             <td>
                 <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" class="btn btn-sm btn-warning">編集</a>
                 <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
