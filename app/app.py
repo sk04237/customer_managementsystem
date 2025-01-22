@@ -138,6 +138,9 @@ def import_customers():
 def shutdown():
     shutdown_func = request.environ.get('werkzeug.server.shutdown')
     if shutdown_func is None:
-        raise RuntimeError('終了機能がサポートされていません。')
+        flash('サーバーの終了機能がサポートされていません。', 'danger')
+        return redirect(url_for('main.home'))
+    
     shutdown_func()
+    flash('アプリケーションを終了しました。', 'success')
     return "アプリケーションを終了しました。"
