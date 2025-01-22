@@ -1,4 +1,5 @@
 import os
+import locale
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from .models import db, Customer
 
@@ -30,13 +31,12 @@ def view_customers():
     sort_order = request.args.get('sort_order', 'asc')  # 昇順または降順
 
     if sort_by == 'name':
-        # 名前で五十音順にソート
-        if sort_order == 'asc':
-            customers = Customer.query.order_by(Customer.name.collate('NOCASE').asc()).all()
-        else:
-            customers = Customer.query.order_by(Customer.name.collate('NOCASE').desc()).all()
+        customers = Customer.query.all()  # 一旦全てのデータを取得
+        locale.setlocale(locale.LC_COLLATE, 'ja_JP.UTF-8')  # 日本語ロケールに設定
+
+        # 名前で五十音順ソート
+        customers.sort(key=lambda c: locale.strxfrm(c.name), reverse=(sort_order == 'desc'))
     else:
-        # 他のカラムでのソート
         if sort_order == 'asc':
             customers = Customer.query.order_by(getattr(Customer, sort_by).asc()).all()
         else:
