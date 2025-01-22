@@ -16,11 +16,66 @@
 <table class="table table-striped">
     <thead>
         <tr>
-            <th><a href="?sort_by=id&sort_order={{ 'desc' if sort_by == 'id' and sort_order == 'asc' else 'asc' }}">ID</a></th>
-            <th><a href="?sort_by=name&sort_order={{ 'desc' if sort_by == 'name' and sort_order == 'asc' else 'asc' }}">名前</a></th>
-            <th><a href="?sort_by=email&sort_order={{ 'desc' if sort_by == 'email' and sort_order == 'asc' else 'asc' }}">メールアドレス</a></th>
-            <th><a href="?sort_by=phone&sort_order={{ 'desc' if sort_by == 'phone' and sort_order == 'asc' else 'asc' }}">電話番号</a></th>
-            <th><a href="?sort_by=company&sort_order={{ 'desc' if sort_by == 'company' and sort_order == 'asc' else 'asc' }}">会社名</a></th>
+            <th>
+                <a href="?sort_by=id&sort_order={{ 'desc' if sort_by == 'id' and sort_order == 'asc' else 'asc' }}">
+                    ID
+                    {% if sort_by == 'id' %}
+                        {% if sort_order == 'asc' %}
+                            <i class="bi bi-arrow-down"></i>  <!-- 降順 -->
+                        {% else %}
+                            <i class="bi bi-arrow-up"></i>  <!-- 昇順 -->
+                        {% endif %}
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort_by=name&sort_order={{ 'desc' if sort_by == 'name' and sort_order == 'asc' else 'asc' }}">
+                    名前
+                    {% if sort_by == 'name' %}
+                        {% if sort_order == 'asc' %}
+                            <i class="bi bi-arrow-down"></i>
+                        {% else %}
+                            <i class="bi bi-arrow-up"></i>
+                        {% endif %}
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort_by=email&sort_order={{ 'desc' if sort_by == 'email' and sort_order == 'asc' else 'asc' }}">
+                    メールアドレス
+                    {% if sort_by == 'email' %}
+                        {% if sort_order == 'asc' %}
+                            <i class="bi bi-arrow-down"></i>
+                        {% else %}
+                            <i class="bi bi-arrow-up"></i>
+                        {% endif %}
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort_by=phone&sort_order={{ 'desc' if sort_by == 'phone' and sort_order == 'asc' else 'asc' }}">
+                    電話番号
+                    {% if sort_by == 'phone' %}
+                        {% if sort_order == 'asc' %}
+                            <i class="bi bi-arrow-down"></i>
+                        {% else %}
+                            <i class="bi bi-arrow-up"></i>
+                        {% endif %}
+                    {% endif %}
+                </a>
+            </th>
+            <th>
+                <a href="?sort_by=company&sort_order={{ 'desc' if sort_by == 'company' and sort_order == 'asc' else 'asc' }}">
+                    会社名
+                    {% if sort_by == 'company' %}
+                        {% if sort_order == 'asc' %}
+                            <i class="bi bi-arrow-down"></i>
+                        {% else %}
+                            <i class="bi bi-arrow-up"></i>
+                        {% endif %}
+                    {% endif %}
+                </a>
+            </th>
             <th>操作</th>
         </tr>
     </thead>
@@ -45,3 +100,4 @@
 
 <a href="/" class="btn btn-secondary">メニューに戻る</a>
 {% endblock %}
+
