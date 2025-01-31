@@ -1,10 +1,33 @@
 import os
 import locale
-from flask import Blueprint, render_template, request, redirect, url_for, flash
+import redis
+import shutil
+import datetime
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from .models import db, Customer
 
 # Blueprint を定義
 main = Blueprint('main', __name__)
+api = Blueprint('api', __name__)
+
+# Redis による Key-Value Store を利用
+try:
+    kv_store = redis.Redis(host='localhost', port=6379, db=0)
+except Exception:
+    kv_store = None  # Redis が利用できない場合は無効化
+
+def save_customer_to_kv_store(customer):
+    """ 顧客情報を Key-Value Store (Redis) に保存 """
+    if kv_store:
+        kv_store.set(f'customer:{customer.id}', f'{customer.name},{customer.email},{customer.phone},{customer.company or ""}')
+
+def get_customer_from_kv_store(customer_id):
+    """ Key-Value Store から顧客情報を取得 """
+    if kv_store:
+        data = kv_store.get(f'customer:{customer_id}')
+        if data:
+            return data.decode('utf-8').split(',')
+    return None
 
 def export_customers_to_file():
     """データベースの顧客情報を customers.txt に書き出す"""
@@ -27,14 +50,13 @@ def home():
 # 顧客一覧を表示するエンドポイント
 @main.route('/customers', methods=['GET'])
 def view_customers():
-    sort_by = request.args.get('sort_by', 'id')  # デフォルトでID順
-    sort_order = request.args.get('sort_order', 'asc')  # 昇順または降順
+    sort_by = request.args.get('sort_by', 'id')  
+    sort_order = request.args.get('sort_order', 'asc')
 
     if sort_by == 'name':
-        customers = Customer.query.all()  # 一旦全てのデータを取得
-        locale.setlocale(locale.LC_COLLATE, 'ja_JP.UTF-8')  # 日本語ロケールに設定
+        customers = Customer.query.all()
+        locale.setlocale(locale.LC_COLLATE, 'ja_JP.UTF-8')
 
-        # 名前で五十音順ソート
         customers.sort(key=lambda c: locale.strxfrm(c.name), reverse=(sort_order == 'desc'))
     else:
         if sort_order == 'asc':
@@ -57,102 +79,103 @@ def add_customer():
             flash('すべての項目を入力してください。', 'danger')
             return redirect(url_for('main.add_customer'))
 
-        existing_customer = Customer.query.filter_by(email=email).first()
-        if existing_customer:
-            flash('同じメールアドレスの顧客がすでに存在します。', 'danger')
-            return redirect(url_for('main.add_customer'))
-
         new_customer = Customer(name=name, email=email, phone=phone, company=company)
         db.session.add(new_customer)
         db.session.commit()
+        save_customer_to_kv_store(new_customer)
         export_customers_to_file()
         flash('顧客情報を追加しました。', 'success')
         return redirect(url_for('main.view_customers'))
 
     return render_template('add_customer.html')
 
-# 検索機能エンドポイント
-@main.route('/search_customers', methods=['GET'])
-def search_customers():
-    query = request.args.get('query')
-    if query:
-        results = Customer.query.filter(
-            (Customer.name.ilike(f'%{query}%')) | 
-            (Customer.email.ilike(f'%{query}%')) |
-            (Customer.phone.ilike(f'%{query}%')) |
-            (Customer.company.ilike(f'%{query}%'))
-        ).all()
-    else:
-        results = []
+# REST API: 顧客情報を取得
+@api.route('/api/customers', methods=['GET'])
+def get_customers():
+    customers = Customer.query.all()
+    return jsonify([{
+        "id": customer.id,
+        "name": customer.name,
+        "email": customer.email,
+        "phone": customer.phone,
+        "company": customer.company
+    } for customer in customers])
 
-    return render_template('view_customers.html', customers=results)
+@api.route('/api/customers/<int:customer_id>', methods=['GET'])
+def get_customer(customer_id):
+    customer = Customer.query.get(customer_id)
+    if customer:
+        return jsonify({
+            "id": customer.id,
+            "name": customer.name,
+            "email": customer.email,
+            "phone": customer.phone,
+            "company": customer.company
+        })
+    return jsonify({"error": "Customer not found"}), 404
 
-# 顧客情報を編集するエンドポイント
-@main.route('/customers/edit/<int:customer_id>', methods=['GET', 'POST'])
-def edit_customer(customer_id):
-    customer = Customer.query.get_or_404(customer_id)
-    if request.method == 'POST':
-        customer.name = request.form.get('name')
-        customer.email = request.form.get('email')
-        customer.phone = request.form.get('phone')
-        customer.company = request.form.get('company')
+@api.route('/api/customers/add', methods=['POST'])
+def add_customer_api():
+    data = request.json
+    if not data or not all(k in data for k in ("name", "email", "phone")):
+        return jsonify({"error": "Invalid data"}), 400
 
-        if not customer.name or not customer.email or not customer.phone:
-            flash('すべての項目を入力してください。', 'danger')
-            return redirect(url_for('main.edit_customer', customer_id=customer.id))
+    new_customer = Customer(
+        name=data["name"],
+        email=data["email"],
+        phone=data["phone"],
+        company=data.get("company")
+    )
 
-        db.session.commit()
-        export_customers_to_file()
-        flash('顧客情報を更新しました。', 'success')
-        return redirect(url_for('main.view_customers'))
+    db.session.add(new_customer)
+    db.session.commit()
+    save_customer_to_kv_store(new_customer)
 
-    return render_template('edit_customer.html', customer=customer)
+    return jsonify({"message": "Customer added successfully"}), 201
 
-# 顧客情報を削除するエンドポイント
-@main.route('/customers/delete/<int:customer_id>', methods=['POST'])
-def delete_customer(customer_id):
-    customer = Customer.query.get_or_404(customer_id)
+@api.route('/api/customers/edit/<int:customer_id>', methods=['PUT'])
+def edit_customer_api(customer_id):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
+
+    data = request.json
+    customer.name = data.get("name", customer.name)
+    customer.email = data.get("email", customer.email)
+    customer.phone = data.get("phone", customer.phone)
+    customer.company = data.get("company", customer.company)
+
+    db.session.commit()
+    save_customer_to_kv_store(customer)
+
+    return jsonify({"message": "Customer updated successfully"}), 200
+
+@api.route('/api/customers/delete/<int:customer_id>', methods=['DELETE'])
+def delete_customer_api(customer_id):
+    customer = Customer.query.get(customer_id)
+    if not customer:
+        return jsonify({"error": "Customer not found"}), 404
+
     db.session.delete(customer)
     db.session.commit()
-    export_customers_to_file()
-    flash('顧客情報を削除しました。', 'success')
-    return redirect(url_for('main.view_customers'))
 
-# 顧客情報をインポートするエンドポイント
-@main.route('/customers/import', methods=['GET', 'POST'])
-def import_customers():
-    if request.method == 'POST':
-        file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.startswith('#') or not line.strip():
-                        continue
-                    try:
-                        name, email, phone, *company = line.strip().split(',')
-                        company = company[0] if company else None
-                        if not Customer.query.filter_by(email=email).first():
-                            new_customer = Customer(name=name.strip(), email=email.strip(), phone=phone.strip(), company=company)
-                            db.session.add(new_customer)
-                    except ValueError:
-                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
-            db.session.commit()
-            flash('顧客情報をインポートしました。', 'success')
-        except Exception as e:
-            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
-        return redirect(url_for('main.view_customers'))
-    return render_template('import_customers.html')
+    return jsonify({"message": "Customer deleted successfully"}), 200
 
-# アプリケーション終了エンドポイント
-@main.route('/shutdown', methods=['POST'])
-def shutdown():
-    """
-    サーバーを強制終了するエンドポイント。
-    """
-    try:
-        os._exit(0)  # プロセスを強制終了
-    except Exception as e:
-        flash(f'終了時にエラーが発生しました: {e}', 'danger')
-        return redirect(url_for('main.home'))
-    
-    return "アプリケーションを終了しました。"
+# データベースのバックアップ
+def backup_database():
+    backup_dir = 'db_backups'
+    if not os.path.exists(backup_dir):
+        os.makedirs(backup_dir)
+
+    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+    backup_path = os.path.join(backup_dir, f'backup_{timestamp}.db')
+
+    shutil.copy('customers.db', backup_path)
+    print(f"Database backup saved to {backup_path}")
+
+def restore_database(backup_file):
+    if os.path.exists(backup_file):
+        shutil.copy(backup_file, 'customers.db')
+        print(f"Database restored from {backup_file}")
+    else:
+        print("Backup file not found.")
