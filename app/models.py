@@ -15,3 +15,23 @@ class Customer(db.Model):
         デバッグ時やログに出力される表現
         """
         return f'<Customer {self.name}, Company: {self.company}>'
+
+# Key-Value Store (例: Redis) を利用する場合
+try:
+    import redis
+    kv_store = redis.Redis(host='localhost', port=6379, db=0)
+except ImportError:
+    kv_store = None  # Redis がインストールされていない場合は無効化
+
+def save_customer_to_kv_store(customer):
+    """ 顧客情報を Key-Value Store に保存 """
+    if kv_store:
+        kv_store.set(f'customer:{customer.id}', f'{customer.name},{customer.email},{customer.phone},{customer.company}')
+
+def get_customer_from_kv_store(customer_id):
+    """ Key-Value Store から顧客情報を取得 """
+    if kv_store:
+        data = kv_store.get(f'customer:{customer_id}')
+        if data:
+            return data.decode('utf-8').split(',')
+    return None
