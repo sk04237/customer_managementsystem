@@ -41,30 +41,6 @@ def add_customer():
     
     return render_template('add_customer.html')
 
-# 顧客データインポート
-@main.route('/customers/import', methods=['GET', 'POST'])
-def import_customers():
-    """顧客データを `customers.txt` からインポート"""
-    if request.method == 'POST':
-        try:
-            with open("customers.txt", 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.startswith('#') or not line.strip():
-                        continue
-                    try:
-                        name, email, phone, *company = line.strip().split(',')
-                        company = company[0] if company else None
-                        if not Customer.query.filter_by(email=email).first():
-                            new_customer = Customer(name=name, email=email, phone=phone, company=company)
-                            db.session.add(new_customer)
-                    except ValueError:
-                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
-            db.session.commit()
-            flash('顧客情報をインポートしました。', 'success')
-        except Exception as e:
-            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
-    return render_template('import_customers.html')
-
 # 商品管理メニュー
 @main.route('/products_menu')
 def products_menu():
@@ -84,15 +60,55 @@ def add_product():
     """新規商品を追加"""
     if request.method == 'POST':
         name = request.form['name']
-        price = request.form['price']
-        discount_limit = request.form.get('discount_limit', 0)
+        price = float(request.form['price'])
+        discount_limit = float(request.form.get('discount_limit', 0))
         new_product = Product(name=name, price=price, discount_limit=discount_limit)
         db.session.add(new_product)
         db.session.commit()
-        flash('商品情報を追加しました', 'success')
+        flash('商品を追加しました', 'success')
         return redirect(url_for('main.view_products'))
     
     return render_template('add_product.html')
+
+# 商品編集一覧
+@main.route('/products_menu/edit_list')
+def edit_product_list():
+    """編集可能な商品の一覧を表示"""
+    products = Product.query.all()
+    return render_template('edit_product_list.html', products=products)
+
+# 商品削除一覧
+@main.route('/products_menu/delete_list')
+def delete_product_list():
+    """削除可能な商品の一覧を表示"""
+    products = Product.query.all()
+    return render_template('delete_product_list.html', products=products)
+
+# 商品編集
+@main.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    """商品の情報を編集"""
+    product = Product.query.get_or_404(product_id)
+    
+    if request.method == 'POST':
+        product.name = request.form['name']
+        product.price = float(request.form['price'])
+        product.discount_limit = float(request.form.get('discount_limit', 0))
+        db.session.commit()
+        flash('商品情報を更新しました', 'success')
+        return redirect(url_for('main.view_products'))
+    
+    return render_template('edit_product.html', product=product)
+
+# 商品削除
+@main.route('/products/delete/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    """商品を削除"""
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('商品を削除しました', 'success')
+    return redirect(url_for('main.view_products'))
 
 # 限度額設定メニュー
 @main.route('/discount_settings', methods=['GET', 'POST'])
