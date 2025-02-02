@@ -19,6 +19,11 @@ try:
 except Exception:
     kv_store = None
 
+ADMIN_PASSWORD = "supervisor2024"
+
+CUSTOMERS_FILE = "customers.txt"
+GOODS_FILE = "goods.txt"
+
 # メニュー関連のルート
 @app.route('/')
 def main_menu():
@@ -33,8 +38,6 @@ def products_menu():
     return render_template('products_menu.html')
 
 # 割引限度額の設定 (上司のみ)
-ADMIN_PASSWORD = "supervisor2024"
-
 @app.route('/discount_settings', methods=['GET', 'POST'])
 def discount_settings():
     if request.method == 'POST':
@@ -88,6 +91,7 @@ def add_customer():
         new_customer = Customer(name=name, email=email, phone=phone, company=company)
         db.session.add(new_customer)
         db.session.commit()
+        export_customers_to_file()
         flash('顧客情報を追加しました', 'success')
 
     return render_template('add_customer.html')
@@ -111,6 +115,7 @@ def add_product():
         new_product = Product(name=name, price=float(price), discount_limit=0)
         db.session.add(new_product)
         db.session.commit()
+        export_goods_to_file()
         flash('商品情報を追加しました', 'success')
 
     return render_template('add_product.html')
@@ -136,17 +141,28 @@ def customer_product_link():
     products = Product.query.all()
     return render_template('customer_product_link.html', customers=customers, products=products)
 
-# REST API: 顧客情報を取得
-@app.route('/api/customers', methods=['GET'])
-def get_customers():
-    customers = Customer.query.all()
-    return jsonify([{
-        "id": customer.id,
-        "name": customer.name,
-        "email": customer.email,
-        "phone": customer.phone,
-        "company": customer.company
-    } for customer in customers])
+# 顧客情報のインポート機能
+@app.route('/customers/import', methods=['GET', 'POST'])
+def import_customers():
+    if request.method == 'POST':
+        try:
+            with open(CUSTOMERS_FILE, 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.startswith('#') or not line.strip():
+                        continue
+                    try:
+                        name, email, phone, *company = line.strip().split(',')
+                        company = company[0] if company else None
+                        if not Customer.query.filter_by(email=email).first():
+                            new_customer = Customer(name=name, email=email, phone=phone, company=company)
+                            db.session.add(new_customer)
+                    except ValueError:
+                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
+            db.session.commit()
+            flash('顧客情報をインポートしました。', 'success')
+        except Exception as e:
+            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
+    return render_template('import_customers.html')
 
 # REST API: 商品情報を取得
 @app.route('/api/products', methods=['GET'])
@@ -168,6 +184,18 @@ def get_customer_requests():
         "product": req.product.name,
         "desired_price": req.desired_price
     } for req in requests])
+
+def export_customers_to_file():
+    with open(CUSTOMERS_FILE, 'w', encoding='utf-8') as file:
+        customers = Customer.query.all()
+        for customer in customers:
+            file.write(f"{customer.name},{customer.email},{customer.phone},{customer.company}\n")
+
+def export_goods_to_file():
+    with open(GOODS_FILE, 'w', encoding='utf-8') as file:
+        products = Product.query.all()
+        for product in products:
+            file.write(f"{product.name},{product.price},{product.discount_limit}\n")
 
 if __name__ == '__main__':
     with app.app_context():
