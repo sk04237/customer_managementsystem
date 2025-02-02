@@ -21,9 +21,9 @@
                     ID
                     {% if sort_by == 'id' %}
                         {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>  <!-- 降順 -->
+                            <i class="bi bi-arrow-down"></i>
                         {% else %}
-                            <i class="bi bi-arrow-up"></i>  <!-- 昇順 -->
+                            <i class="bi bi-arrow-up"></i>
                         {% endif %}
                     {% endif %}
                 </a>
@@ -92,6 +92,7 @@
                 <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
                     <button type="submit" class="btn btn-sm btn-danger">削除</button>
                 </form>
+                <a href="{{ url_for('main.customer_product_link') }}?customer_id={{ customer.id }}" class="btn btn-sm btn-info">商品関連付け</a>
             </td>
         </tr>
         {% endfor %}
@@ -100,4 +101,3 @@
 
 <a href="/" class="btn btn-secondary">メニューに戻る</a>
 {% endblock %}
-
