@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">商品編集</h2>
+    <ul class="list-group mt-3">
+        {% for product in products %}
+        <li class="list-group-item">
+            <a href="{{ url_for('main.edit_product', product_id=product.id) }}">
+                {{ product.name }} (¥{{ product.price }})
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+    <a href="/products_menu" class="btn btn-secondary mt-3">戻る</a>
+</div>
+{% endblock %}
