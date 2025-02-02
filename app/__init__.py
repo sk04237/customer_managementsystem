@@ -19,8 +19,12 @@ def create_app():
     from app.routes import main
     app.register_blueprint(main)
 
-    # データベースを作成
+    # データベースを作成（エラーハンドリング付き）
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+            print("Database initialized successfully.")
+        except Exception as e:
+            print(f"Database initialization failed: {e}")
 
     return app
