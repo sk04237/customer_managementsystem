@@ -1,37 +1,22 @@
-from . import db  # 相対インポート
+from flask_sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
 
 class Customer(db.Model):
-    """
-    顧客情報を管理するデータベースモデル
-    """
-    id = db.Column(db.Integer, primary_key=True)  # 顧客ID（プライマリキー）
-    name = db.Column(db.String(100), nullable=False)  # 顧客名
-    email = db.Column(db.String(100), nullable=False, unique=True)  # メールアドレス（ユニーク制約）
-    phone = db.Column(db.String(15), nullable=False)  # 電話番号
-    company = db.Column(db.String(100), nullable=True)  # 会社名（オプション）
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    phone = db.Column(db.String(15), nullable=False)
+    company = db.Column(db.String(100), nullable=True)
 
-    def __repr__(self):
-        """
-        デバッグ時やログに出力される表現
-        """
-        return f'<Customer {self.name}, Company: {self.company}>'
+class Product(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    discount_limit = db.Column(db.Float, nullable=True)
 
-# Key-Value Store (例: Redis) を利用する場合
-try:
-    import redis
-    kv_store = redis.Redis(host='localhost', port=6379, db=0)
-except ImportError:
-    kv_store = None  # Redis がインストールされていない場合は無効化
-
-def save_customer_to_kv_store(customer):
-    """ 顧客情報を Key-Value Store に保存 """
-    if kv_store:
-        kv_store.set(f'customer:{customer.id}', f'{customer.name},{customer.email},{customer.phone},{customer.company}')
-
-def get_customer_from_kv_store(customer_id):
-    """ Key-Value Store から顧客情報を取得 """
-    if kv_store:
-        data = kv_store.get(f'customer:{customer_id}')
-        if data:
-            return data.decode('utf-8').split(',')
-    return None
+class CustomerProduct(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customer.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
+    desired_price = db.Column(db.Float, nullable=False)
