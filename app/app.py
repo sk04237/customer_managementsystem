@@ -3,71 +3,77 @@ import locale
 import redis
 import shutil
 import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from .models import db, Customer
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
+from models import db, Customer, Product, CustomerProduct
 
-# Blueprint を定義
-main = Blueprint('main', __name__)
-api = Blueprint('api', __name__)
+# Flask アプリケーションの設定
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///customers.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = 'your_secret_key'
+db.init_app(app)
 
-# Redis による Key-Value Store を利用
+# Redis 設定
 try:
     kv_store = redis.Redis(host='localhost', port=6379, db=0)
 except Exception:
-    kv_store = None  # Redis が利用できない場合は無効化
+    kv_store = None
 
-def save_customer_to_kv_store(customer):
-    """ 顧客情報を Key-Value Store (Redis) に保存 """
-    if kv_store:
-        kv_store.set(f'customer:{customer.id}', f'{customer.name},{customer.email},{customer.phone},{customer.company or ""}')
-
-def get_customer_from_kv_store(customer_id):
-    """ Key-Value Store から顧客情報を取得 """
-    if kv_store:
-        data = kv_store.get(f'customer:{customer_id}')
-        if data:
-            return data.decode('utf-8').split(',')
-    return None
-
-def export_customers_to_file():
-    """データベースの顧客情報を customers.txt に書き出す"""
-    file_path = os.path.join(os.path.dirname(__file__), '../customers.txt')
-    try:
-        with open(file_path, 'w', encoding='utf-8') as file:
-            file.write("# 顧客情報フォーマット\n")
-            file.write("# 名前,メールアドレス,電話番号,会社名\n")
-            customers = Customer.query.all()
-            for customer in customers:
-                file.write(f"{customer.name},{customer.email},{customer.phone},{customer.company or ''}\n")
-    except Exception as e:
-        print(f"エクスポート中にエラーが発生しました: {e}")
-
-# メニュー画面
-@main.route('/')
-def home():
+# メニュー関連のルート
+@app.route('/')
+def main_menu():
     return render_template('menu.html')
 
-# 顧客一覧を表示するエンドポイント
-@main.route('/customers', methods=['GET'])
-def view_customers():
-    sort_by = request.args.get('sort_by', 'id')  
-    sort_order = request.args.get('sort_order', 'asc')
+@app.route('/customers_menu')
+def customers_menu():
+    return render_template('customers_menu.html')
 
-    if sort_by == 'name':
-        customers = Customer.query.all()
-        locale.setlocale(locale.LC_COLLATE, 'ja_JP.UTF-8')
+@app.route('/products_menu')
+def products_menu():
+    return render_template('products_menu.html')
 
-        customers.sort(key=lambda c: locale.strxfrm(c.name), reverse=(sort_order == 'desc'))
-    else:
-        if sort_order == 'asc':
-            customers = Customer.query.order_by(getattr(Customer, sort_by).asc()).all()
+# 割引限度額の設定 (上司のみ)
+ADMIN_PASSWORD = "supervisor2024"
+
+@app.route('/discount_settings', methods=['GET', 'POST'])
+def discount_settings():
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == ADMIN_PASSWORD:
+            session['admin'] = True
+            return redirect(url_for('set_discount'))
         else:
-            customers = Customer.query.order_by(getattr(Customer, sort_by).desc()).all()
+            flash('パスワードが間違っています', 'danger')
 
-    return render_template('view_customers.html', customers=customers, sort_by=sort_by, sort_order=sort_order)
+    return render_template('discount_login.html')
 
-# 顧客情報を追加するエンドポイント
-@main.route('/customers/add', methods=['GET', 'POST'])
+@app.route('/set_discount', methods=['GET', 'POST'])
+def set_discount():
+    if not session.get('admin'):
+        flash('認証が必要です', 'danger')
+        return redirect(url_for('discount_settings'))
+
+    if request.method == 'POST':
+        product_id = request.form.get('product_id')
+        new_discount_limit = request.form.get('discount_limit')
+        product = Product.query.get(product_id)
+        if product:
+            product.discount_limit = new_discount_limit
+            db.session.commit()
+            flash('割引限度額を更新しました', 'success')
+        else:
+            flash('商品が見つかりません', 'danger')
+
+    products = Product.query.all()
+    return render_template('set_discount.html', products=products)
+
+# 顧客管理
+@app.route('/customers', methods=['GET'])
+def view_customers():
+    customers = Customer.query.all()
+    return render_template('view_customers.html', customers=customers)
+
+@app.route('/customers/add', methods=['GET', 'POST'])
 def add_customer():
     if request.method == 'POST':
         name = request.form.get('name')
@@ -76,21 +82,62 @@ def add_customer():
         company = request.form.get('company')
 
         if not name or not email or not phone:
-            flash('すべての項目を入力してください。', 'danger')
-            return redirect(url_for('main.add_customer'))
+            flash('すべての項目を入力してください', 'danger')
+            return redirect(url_for('add_customer'))
 
         new_customer = Customer(name=name, email=email, phone=phone, company=company)
         db.session.add(new_customer)
         db.session.commit()
-        save_customer_to_kv_store(new_customer)
-        export_customers_to_file()
-        flash('顧客情報を追加しました。', 'success')
-        return redirect(url_for('main.view_customers'))
+        flash('顧客情報を追加しました', 'success')
 
     return render_template('add_customer.html')
 
+# 商品管理
+@app.route('/products', methods=['GET'])
+def view_products():
+    products = Product.query.all()
+    return render_template('view_products.html', products=products)
+
+@app.route('/products/add', methods=['GET', 'POST'])
+def add_product():
+    if request.method == 'POST':
+        name = request.form.get('name')
+        price = request.form.get('price')
+
+        if not name or not price:
+            flash('すべての項目を入力してください', 'danger')
+            return redirect(url_for('add_product'))
+
+        new_product = Product(name=name, price=float(price), discount_limit=0)
+        db.session.add(new_product)
+        db.session.commit()
+        flash('商品情報を追加しました', 'success')
+
+    return render_template('add_product.html')
+
+# 顧客と商品の関連付け
+@app.route('/customer_product_link', methods=['GET', 'POST'])
+def customer_product_link():
+    if request.method == 'POST':
+        customer_id = request.form.get('customer_id')
+        product_id = request.form.get('product_id')
+        desired_price = request.form.get('desired_price')
+
+        if not customer_id or not product_id or not desired_price:
+            flash('すべての項目を入力してください', 'danger')
+            return redirect(url_for('customer_product_link'))
+
+        new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
+        db.session.add(new_link)
+        db.session.commit()
+        flash('顧客と商品の関連を追加しました', 'success')
+
+    customers = Customer.query.all()
+    products = Product.query.all()
+    return render_template('customer_product_link.html', customers=customers, products=products)
+
 # REST API: 顧客情報を取得
-@api.route('/api/customers', methods=['GET'])
+@app.route('/api/customers', methods=['GET'])
 def get_customers():
     customers = Customer.query.all()
     return jsonify([{
@@ -101,81 +148,28 @@ def get_customers():
         "company": customer.company
     } for customer in customers])
 
-@api.route('/api/customers/<int:customer_id>', methods=['GET'])
-def get_customer(customer_id):
-    customer = Customer.query.get(customer_id)
-    if customer:
-        return jsonify({
-            "id": customer.id,
-            "name": customer.name,
-            "email": customer.email,
-            "phone": customer.phone,
-            "company": customer.company
-        })
-    return jsonify({"error": "Customer not found"}), 404
+# REST API: 商品情報を取得
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    products = Product.query.all()
+    return jsonify([{
+        "id": product.id,
+        "name": product.name,
+        "price": product.price,
+        "discount_limit": product.discount_limit
+    } for product in products])
 
-@api.route('/api/customers/add', methods=['POST'])
-def add_customer_api():
-    data = request.json
-    if not data or not all(k in data for k in ("name", "email", "phone")):
-        return jsonify({"error": "Invalid data"}), 400
+# REST API: 顧客の希望価格リストを取得
+@app.route('/api/customer_requests', methods=['GET'])
+def get_customer_requests():
+    requests = CustomerProduct.query.all()
+    return jsonify([{
+        "customer": req.customer.name,
+        "product": req.product.name,
+        "desired_price": req.desired_price
+    } for req in requests])
 
-    new_customer = Customer(
-        name=data["name"],
-        email=data["email"],
-        phone=data["phone"],
-        company=data.get("company")
-    )
-
-    db.session.add(new_customer)
-    db.session.commit()
-    save_customer_to_kv_store(new_customer)
-
-    return jsonify({"message": "Customer added successfully"}), 201
-
-@api.route('/api/customers/edit/<int:customer_id>', methods=['PUT'])
-def edit_customer_api(customer_id):
-    customer = Customer.query.get(customer_id)
-    if not customer:
-        return jsonify({"error": "Customer not found"}), 404
-
-    data = request.json
-    customer.name = data.get("name", customer.name)
-    customer.email = data.get("email", customer.email)
-    customer.phone = data.get("phone", customer.phone)
-    customer.company = data.get("company", customer.company)
-
-    db.session.commit()
-    save_customer_to_kv_store(customer)
-
-    return jsonify({"message": "Customer updated successfully"}), 200
-
-@api.route('/api/customers/delete/<int:customer_id>', methods=['DELETE'])
-def delete_customer_api(customer_id):
-    customer = Customer.query.get(customer_id)
-    if not customer:
-        return jsonify({"error": "Customer not found"}), 404
-
-    db.session.delete(customer)
-    db.session.commit()
-
-    return jsonify({"message": "Customer deleted successfully"}), 200
-
-# データベースのバックアップ
-def backup_database():
-    backup_dir = 'db_backups'
-    if not os.path.exists(backup_dir):
-        os.makedirs(backup_dir)
-
-    timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-    backup_path = os.path.join(backup_dir, f'backup_{timestamp}.db')
-
-    shutil.copy('customers.db', backup_path)
-    print(f"Database backup saved to {backup_path}")
-
-def restore_database(backup_file):
-    if os.path.exists(backup_file):
-        shutil.copy(backup_file, 'customers.db')
-        print(f"Database restored from {backup_file}")
-    else:
-        print("Backup file not found.")
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True)
