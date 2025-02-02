@@ -1,12 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}商品管理メニュー{% endblock %}
-
 {% block content %}
-<h1>商品管理メニュー</h1>
-<div class="list-group">
-    <a href="/products" class="list-group-item list-group-item-action">商品一覧</a>
-    <a href="/products/add" class="list-group-item list-group-item-action">商品追加</a>
+<div class="container">
+    <h2 class="mt-4">商品管理メニュー</h2>
+    <div class="list-group mt-3">
+        <a href="/products" class="list-group-item list-group-item-action">商品一覧</a>
+        <a href="/products/add" class="list-group-item list-group-item-action">商品追加</a>
+        <a href="/products/edit" class="list-group-item list-group-item-action">商品編集</a>
+        <a href="/products/delete" class="list-group-item list-group-item-action">商品削除</a>
+        <a href="/set_discount" class="list-group-item list-group-item-action">割引限度額設定</a>
+    </div>
 </div>
-<a href="/" class="btn btn-secondary mt-3">メインメニューに戻る</a>
 {% endblock %}
