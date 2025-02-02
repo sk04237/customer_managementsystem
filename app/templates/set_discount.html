@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}割引限度額設定{% endblock %}
+
+{% block content %}
+<h1>割引限度額設定</h1>
+<form method="POST">
+    <div class="mb-3">
+        <label for="product_id" class="form-label">商品</label>
+        <select id="product_id" name="product_id" class="form-select" required>
+            {% for product in products %}
+                <option value="{{ product.id }}">{{ product.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="mb-3">
+        <label for="discount_limit" class="form-label">割引限度額</label>
+        <input type="number" id="discount_limit" name="discount_limit" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary">設定</button>
+</form>
+<a href="/" class="btn btn-secondary mt-3">メインメニューに戻る</a>
+{% endblock %}
