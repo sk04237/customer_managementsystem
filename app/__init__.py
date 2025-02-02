@@ -1,35 +1,26 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+from app.config import Config
 
-# データベースオブジェクトを作成
+# データベースのインスタンス作成
 db = SQLAlchemy()
 
 def create_app():
-    """
-    Flaskアプリケーションを作成して初期化する。
-    """
+    """Flask アプリケーションを作成し、設定・データベースを初期化する"""
     app = Flask(__name__)
+    
+    # 設定を適用
+    app.config.from_object(Config)
 
-    # アプリケーション設定
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///customers.db'  # SQLiteデータベースのパス
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # 不要な通知を無効化
-    app.secret_key = 'your_secret_key'  # セッション用のシークレットキー
-
-    # データベースを初期化
+    # データベースの初期化
     db.init_app(app)
 
+    # Blueprint の登録
+    from app.app import main
+    app.register_blueprint(main)
+
+    # データベースを作成
     with app.app_context():
-        # Blueprintを登録
-        from app.app import main  # 相対インポートを使用してBlueprintをインポート
-        app.register_blueprint(main)
-        
-        # データベースを作成
         db.create_all()
 
     return app
-
-# エントリーポイント
-if __name__ == "__main__":
-    app = create_app()
-    app.run(debug=True)  # デバッグモードでアプリケーションを起動
-
