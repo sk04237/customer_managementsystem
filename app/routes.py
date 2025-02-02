@@ -134,6 +134,30 @@ def import_products():
 
     return render_template('import_products.html')
 
+@main.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    """商品の情報を編集"""
+    product = Product.query.get_or_404(product_id)
+    
+    if request.method == 'POST':
+        product.name = request.form['name']
+        product.price = float(request.form['price'])
+        product.discount_limit = float(request.form.get('discount_limit', 0))
+        db.session.commit()
+        flash('商品情報を更新しました', 'success')
+        return redirect(url_for('main.view_products'))
+    
+    return render_template('edit_product.html', product=product)
+
+@main.route('/products/delete/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    """商品を削除"""
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('商品を削除しました', 'success')
+    return redirect(url_for('main.view_products'))
+
 # ==========================
 # 限度額設定メニュー
 # ==========================
@@ -169,4 +193,3 @@ def set_discount():
 
     products = Product.query.all()
     return render_template('set_discount.html', products=products)
-
