@@ -1,27 +1,22 @@
 {% extends "base.html" %}
 
-{% block title %}顧客追加{% endblock %}
-
 {% block content %}
-<h1 class="mb-4">顧客追加</h1>
-<form method="POST" class="needs-validation" novalidate>
-    <div class="mb-3">
-        <label for="name" class="form-label">名前</label>
-        <input type="text" id="name" name="name" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">メールアドレス</label>
-        <input type="email" id="email" name="email" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="phone" class="form-label">電話番号</label>
-        <input type="text" id="phone" name="phone" class="form-control" required>
-    </div>
-    <div class="mb-3">
-        <label for="company" class="form-label">会社名</label>
-        <input type="text" id="company" name="company" class="form-control">
-    </div>
-    <button type="submit" class="btn btn-primary">追加</button>
-    <a href="/customers" class="btn btn-secondary">顧客一覧に戻る</a>
-</form>
+<div class="container">
+    <h2 class="mt-4">顧客を追加</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="name" class="form-label">名前</label>
+            <input type="text" id="name" name="name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">メール</label>
+            <input type="email" id="email" name="email" class="form-control" required>
+        </div>
+        <div class="mb-3">
+            <label for="phone" class="form-label">電話番号</label>
+            <input type="tel" id="phone" name="phone" class="form-control" required pattern="[0-9]{10,11}">
+        </div>
+        <button type="submit" class="btn btn-primary">追加</button>
+    </form>
+</div>
 {% endblock %}
