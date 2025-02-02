@@ -1,15 +1,12 @@
 {% extends "base.html" %}
 
-{% block title %}メニュー{% endblock %}
-
 {% block content %}
-<h1 class="mb-4">メニュー</h1>
-<div class="list-group">
-    <a href="/customers" class="list-group-item list-group-item-action">顧客一覧を見る</a>
-    <a href="/customers/add" class="list-group-item list-group-item-action">顧客を追加する</a>
-    <a href="/customers/import" class="list-group-item list-group-item-action">顧客情報をインポートする</a>
+<div class="container">
+    <h2 class="mt-4">メインメニュー</h2>
+    <div class="list-group mt-3">
+        <a href="/customers_menu" class="list-group-item list-group-item-action">顧客管理メニュー</a>
+        <a href="/products_menu" class="list-group-item list-group-item-action">商品管理メニュー</a>
+        <a href="/discount_settings" class="list-group-item list-group-item-action">限度額設定メニュー</a>
+    </div>
 </div>
-<form method="POST" action="/shutdown" class="mt-4">
-    <button type="submit" class="btn btn-danger">アプリケーションを終了する</button>
-</form>
 {% endblock %}
