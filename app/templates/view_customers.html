@@ -1,103 +1,27 @@
 {% extends "base.html" %}
 
-{% block title %}顧客一覧{% endblock %}
-
 {% block content %}
-<h1>顧客一覧</h1>
-
-<!-- 検索フォーム -->
-<form method="GET" action="/search_customers" class="mb-4">
-    <div class="input-group">
-        <input type="text" name="query" class="form-control" placeholder="顧客名、メール、電話番号、会社名を入力" required>
-        <button type="submit" class="btn btn-primary">検索</button>
-    </div>
-</form>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>
-                <a href="?sort_by=id&sort_order={{ 'desc' if sort_by == 'id' and sort_order == 'asc' else 'asc' }}">
-                    ID
-                    {% if sort_by == 'id' %}
-                        {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>
-                        {% else %}
-                            <i class="bi bi-arrow-up"></i>
-                        {% endif %}
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?sort_by=name&sort_order={{ 'desc' if sort_by == 'name' and sort_order == 'asc' else 'asc' }}">
-                    名前
-                    {% if sort_by == 'name' %}
-                        {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>
-                        {% else %}
-                            <i class="bi bi-arrow-up"></i>
-                        {% endif %}
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?sort_by=email&sort_order={{ 'desc' if sort_by == 'email' and sort_order == 'asc' else 'asc' }}">
-                    メールアドレス
-                    {% if sort_by == 'email' %}
-                        {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>
-                        {% else %}
-                            <i class="bi bi-arrow-up"></i>
-                        {% endif %}
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?sort_by=phone&sort_order={{ 'desc' if sort_by == 'phone' and sort_order == 'asc' else 'asc' }}">
-                    電話番号
-                    {% if sort_by == 'phone' %}
-                        {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>
-                        {% else %}
-                            <i class="bi bi-arrow-up"></i>
-                        {% endif %}
-                    {% endif %}
-                </a>
-            </th>
-            <th>
-                <a href="?sort_by=company&sort_order={{ 'desc' if sort_by == 'company' and sort_order == 'asc' else 'asc' }}">
-                    会社名
-                    {% if sort_by == 'company' %}
-                        {% if sort_order == 'asc' %}
-                            <i class="bi bi-arrow-down"></i>
-                        {% else %}
-                            <i class="bi bi-arrow-up"></i>
-                        {% endif %}
-                    {% endif %}
-                </a>
-            </th>
-            <th>操作</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for customer in customers %}
-        <tr>
-            <td>{{ customer.id }}</td>
-            <td>{{ customer.name }}</td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phone }}</td>
-            <td>{{ customer.company }}</td>
-            <td>
-                <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" class="btn btn-sm btn-warning">編集</a>
-                <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
-                    <button type="submit" class="btn btn-sm btn-danger">削除</button>
-                </form>
-                <a href="{{ url_for('main.customer_product_link') }}?customer_id={{ customer.id }}" class="btn btn-sm btn-info">商品関連付け</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-<a href="/" class="btn btn-secondary">メニューに戻る</a>
+<div class="container">
+    <h2 class="mt-4">顧客一覧</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>名前</th>
+                <th>メール</th>
+                <th>電話番号</th>
+                <th>会社名</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>{{ customer.name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.phone }}</td>
+                <td>{{ customer.company }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}
