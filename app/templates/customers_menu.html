@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">顧客管理メニュー</h2>
+    <div class="list-group mt-3">
+        <a href="/customers" class="list-group-item list-group-item-action">顧客一覧</a>
+        <a href="/customers/add" class="list-group-item list-group-item-action">顧客追加</a>
+        <a href="/customers/import" class="list-group-item list-group-item-action">顧客データのインポート</a>
+        <a href="/" class="list-group-item list-group-item-action text-danger">メインメニューへ戻る</a>
+    </div>
+</div>
+{% endblock %}
