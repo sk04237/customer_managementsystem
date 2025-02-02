@@ -2,7 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from app.config import Config
 
-# データベースのインスタンス作成
+# SQLAlchemy のインスタンスを作成
 db = SQLAlchemy()
 
 def create_app():
@@ -16,7 +16,7 @@ def create_app():
     db.init_app(app)
 
     # Blueprint の登録
-    from app.app import main
+    from app.routes import main
     app.register_blueprint(main)
 
     # データベースを作成
