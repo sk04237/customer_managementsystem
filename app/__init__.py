@@ -2,13 +2,13 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from app.config import Config
 
-# SQLAlchemy のインスタンスを作成
+# グローバルな SQLAlchemy インスタンスを作成
 db = SQLAlchemy()
 
 def create_app():
     """Flask アプリケーションを作成し、設定・データベースを初期化する"""
     app = Flask(__name__)
-    
+
     # 設定を適用
     app.config.from_object(Config)
 
