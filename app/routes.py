@@ -103,31 +103,46 @@ def add_product():
     
     return render_template('add_product.html')
 
-# ==========================
-# 顧客と商品の関連付け
-# ==========================
-@main.route('/customers/<int:customer_id>/link_product', methods=['GET', 'POST'])
-def link_product(customer_id):
-    """顧客に商品を関連付ける"""
-    customer = Customer.query.get_or_404(customer_id)
-    products = Product.query.all()
-
+@main.route('/products/import', methods=['GET', 'POST'])
+def import_products():
+    """商品データを `goods.txt` からインポート"""
     if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        desired_price = float(request.form['desired_price'])
+        file_path = "goods.txt"
+        if not os.path.exists(file_path):
+            flash('goods.txt が見つかりません', 'danger')
+            return redirect(url_for('main.products_menu'))
 
-        existing_entry = CustomerProduct.query.filter_by(customer_id=customer_id, product_id=product_id).first()
-        if existing_entry:
-            flash('この顧客にはすでにこの商品が関連付けられています。', 'warning')
-        else:
-            new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
-            db.session.add(new_link)
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.startswith('#') or not line.strip():
+                        continue
+                    try:
+                        parts = line.strip().split(',')
+                        if len(parts) < 2:
+                            flash(f'無効なフォーマット: {line.strip()}', 'danger')
+                            continue
+
+                        name = parts[0]
+                        price = float(parts[1])
+                        discount_limit = float(parts[2]) if len(parts) > 2 else 0
+
+                        existing_product = Product.query.filter_by(name=name).first()
+                        if not existing_product:
+                            new_product = Product(name=name, price=price, discount_limit=discount_limit)
+                            db.session.add(new_product)
+                        else:
+                            flash(f'既に登録されている商品: {name}', 'warning')
+
+                    except ValueError:
+                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
+
             db.session.commit()
-            flash('商品を顧客に関連付けました', 'success')
+            flash('商品情報をインポートしました', 'success')
+        except Exception as e:
+            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
 
-        return redirect(url_for('main.view_customers'))
-
-    return render_template('customer_product_link.html', customer=customer, products=products)
+    return render_template('import_products.html')
 
 # ==========================
 # 限度額設定メニュー
