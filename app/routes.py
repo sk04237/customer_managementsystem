@@ -17,6 +17,15 @@ def main_menu():
 # ==========================
 # 顧客管理メニュー
 # ==========================
+@main.route('/customers/delete/<int:customer_id>', methods=['POST'])
+def delete_customer(customer_id):
+    """顧客を削除"""
+    customer = Customer.query.get_or_404(customer_id)
+    db.session.delete(customer)
+    db.session.commit()
+    flash('顧客を削除しました', 'success')
+    return redirect(url_for('main.view_customers'))
+
 @main.route('/customers/edit/<int:customer_id>', methods=['GET', 'POST'])
 def edit_customer(customer_id):
     """顧客情報を編集"""
