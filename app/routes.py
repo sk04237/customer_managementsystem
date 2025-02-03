@@ -103,6 +103,30 @@ def add_product():
     
     return render_template('add_product.html')
 
+@main.route('/products/edit/<int:product_id>', methods=['GET', 'POST'])
+def edit_product(product_id):
+    """商品の情報を編集"""
+    product = Product.query.get_or_404(product_id)
+
+    if request.method == 'POST':
+        product.name = request.form['name']
+        product.price = float(request.form['price'])
+        product.discount_limit = float(request.form.get('discount_limit', 0))
+        db.session.commit()
+        flash('商品情報を更新しました', 'success')
+        return redirect(url_for('main.view_products'))
+
+    return render_template('edit_product_list.html', product=product)
+
+@main.route('/products/delete/<int:product_id>', methods=['POST'])
+def delete_product(product_id):
+    """商品を削除"""
+    product = Product.query.get_or_404(product_id)
+    db.session.delete(product)
+    db.session.commit()
+    flash('商品を削除しました', 'success')
+    return redirect(url_for('main.view_products'))
+
 @main.route('/products/import', methods=['GET', 'POST'])
 def import_products():
     """商品データを `goods.txt` からインポート"""
@@ -143,6 +167,7 @@ def import_products():
             flash(f'インポート中にエラーが発生しました: {e}', 'danger')
 
     return render_template('import_products.html')
+
 
 # ==========================
 # 限度額設定メニュー
