@@ -3,20 +3,21 @@
 {% block content %}
 <div class="container">
     <h2 class="mt-4">商品を追加</h2>
-    <form method="POST">
+    <form method="POST" class="needs-validation" novalidate>
         <div class="mb-3">
             <label for="name" class="form-label">商品名</label>
             <input type="text" id="name" name="name" class="form-control" required>
         </div>
         <div class="mb-3">
-            <label for="price" class="form-label">価格</label>
+            <label for="price" class="form-label">価格 (円)</label>
             <input type="number" id="price" name="price" class="form-control" required min="1">
         </div>
         <div class="mb-3">
-            <label for="discount_limit" class="form-label">割引限度額</label>
+            <label for="discount_limit" class="form-label">割引限度額 (円)</label>
             <input type="number" id="discount_limit" name="discount_limit" class="form-control" required min="0">
         </div>
         <button type="submit" class="btn btn-primary">追加</button>
+        <a href="javascript:history.back()" class="btn btn-secondary">戻る</a>
     </form>
 </div>
 {% endblock %}
