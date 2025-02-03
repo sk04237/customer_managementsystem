@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">限度額設定（管理者専用）</h2>
+    <form method="POST">
+        <div class="mb-3">
+            <label for="password" class="form-label">管理者パスワード</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">ログイン</button>
+        <a href="{{ url_for('main.main_menu') }}" class="btn btn-secondary">キャンセル</a>
+    </form>
+</div>
+{% endblock %}
