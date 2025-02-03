@@ -7,7 +7,7 @@
         <a href="{{ url_for('main.view_customers') }}" class="list-group-item list-group-item-action">顧客一覧</a>
         <a href="{{ url_for('main.add_customer') }}" class="list-group-item list-group-item-action">顧客追加</a>
         <a href="{{ url_for('main.import_customers') }}" class="list-group-item list-group-item-action">顧客データのインポート</a>
-        <a href="/" class="list-group-item list-group-item-action text-danger">メインメニューへ戻る</a>
     </div>
+    <a href="javascript:history.back()" class="btn btn-secondary mt-3">戻る</a>
 </div>
 {% endblock %}
