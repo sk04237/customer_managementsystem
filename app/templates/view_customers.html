@@ -10,6 +10,7 @@
                 <th>メール</th>
                 <th>電話番号</th>
                 <th>会社名</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
@@ -19,6 +20,11 @@
                 <td>{{ customer.email }}</td>
                 <td>{{ customer.phone }}</td>
                 <td>{{ customer.company }}</td>
+                <td>
+                    <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" class="btn btn-primary btn-sm">
+                        商品を関連付ける
+                    </a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
