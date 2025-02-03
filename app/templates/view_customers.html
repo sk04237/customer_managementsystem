@@ -2,8 +2,16 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="mt-4 text-center">顧客一覧</h2>
-
+    <h2 class="mt-4">顧客一覧</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
     <div class="table-responsive mt-4">
         <table class="table table-hover">
             <thead class="table-dark">
@@ -28,7 +36,7 @@
                             <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('本当に削除しますか？');">削除</button>
                         </form>
                         <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" class="btn btn-primary btn-sm">商品を関連付ける</a>
-                        <a href="{{ url_for('main.linked_products', customer_id=customer.id) }}" class="btn btn-secondary btn-sm">関連付けを表示</a>
+                        <a href="{{ url_for('main.linked_products', customer_id=customer.id) }}" class="btn btn-success btn-sm">関連付けを表示</a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -36,6 +44,6 @@
         </table>
     </div>
 
-    <a href="{{ url_for('main.add_customer') }}" class="btn btn-success mt-3">顧客を追加</a>
+    <a href="{{ url_for('main.add_customer') }}" class="btn btn-success mt-3">新規顧客追加</a>
 </div>
 {% endblock %}
