@@ -2,60 +2,91 @@
 
 {% block content %}
 <div class="container">
-    <h2 class="mt-4">顧客一覧</h2>
-    
+    <h2 class="mt-4 text-center">📋 顧客管理</h2>
+
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light rounded">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('main.view_customers') }}">顧客一覧</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link btn btn-success text-white" href="{{ url_for('main.add_customer') }}">
+                            ➕ 顧客追加
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
     <!-- メッセージ表示 -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
+                <div class="alert alert-{{ category }} mt-3">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
-    
+
     <!-- 顧客一覧テーブル -->
-    <table class="table table-bordered mt-3">
-        <thead>
-            <tr>
-                <th>名前</th>
-                <th>メール</th>
-                <th>電話番号</th>
-                <th>会社名</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for customer in customers %}
-            <tr>
-                <td>{{ customer.name }}</td>
-                <td>{{ customer.email }}</td>
-                <td>{{ customer.phone }}</td>
-                <td>{{ customer.company if customer.company else 'なし' }}</td>
-                <td>
-                    {% if customer.id %}
-                        <!-- 編集ボタン -->
-                        <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" class="btn btn-warning btn-sm">編集</a>
+    <div class="table-responsive mt-4">
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>👤 名前</th>
+                    <th>📧 メール</th>
+                    <th>📞 電話番号</th>
+                    <th>🏢 会社名</th>
+                    <th>⚙️ 操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.name }}</td>
+                    <td>{{ customer.email }}</td>
+                    <td>{{ customer.phone }}</td>
+                    <td>{{ customer.company if customer.company else 'なし' }}</td>
+                    <td>
+                        {% if customer.id %}
+                            <!-- 編集ボタン -->
+                            <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" 
+                               class="btn btn-warning btn-sm text-white">
+                               ✏️ 編集
+                            </a>
 
-                        <!-- 削除フォーム -->
-                        <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('本当に削除しますか？');">削除</button>
-                        </form>
+                            <!-- 削除ボタン -->
+                            <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" 
+                                  style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm" 
+                                        onclick="return confirm('本当に削除しますか？');">
+                                    🗑️ 削除
+                                </button>
+                            </form>
 
-                        <!-- 商品関連付けボタン -->
-                        <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" class="btn btn-primary btn-sm">商品を関連付ける</a>
+                            <!-- 商品関連付けボタン -->
+                            <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" 
+                               class="btn btn-primary btn-sm">
+                               🔗 商品を関連付ける
+                            </a>
 
-                        <!-- 関連付けた商品を確認ボタン -->
-                        <a href="{{ url_for('main.linked_products', customer_id=customer.id) }}" class="btn btn-info btn-sm">関連付けを表示</a>
-                    {% else %}
-                        <span class="text-danger">エラー: IDなし</span>
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-
-    <!-- 新規顧客追加ボタン -->
-    <a href="{{ url_for('main.add_customer') }}" class="btn btn-success mt-3">新規顧客追加</a>
+                            <!-- 関連付け一覧ボタン -->
+                            <a href="{{ url_for('main.linked_products', customer_id=customer.id) }}" 
+                               class="btn btn-success btn-sm">
+                               🔍 関連付けを表示
+                            </a>
+                        {% else %}
+                            <span class="text-danger">エラー: IDなし</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}
