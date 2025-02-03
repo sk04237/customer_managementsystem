@@ -21,9 +21,15 @@
                 <td>{{ customer.phone }}</td>
                 <td>{{ customer.company }}</td>
                 <td>
-                    <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" class="btn btn-primary btn-sm">
-                        商品を関連付ける
-                    </a>
+                    {% if customer.id %}
+                    <a href="{{ url_for('main.edit_customer', customer_id=customer.id) }}" class="btn btn-warning btn-sm">編集</a>
+                    <form method="POST" action="{{ url_for('main.delete_customer', customer_id=customer.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('本当に削除しますか？');">削除</button>
+                    </form>
+                    <a href="{{ url_for('main.link_product', customer_id=customer.id) }}" class="btn btn-primary btn-sm">商品を関連付ける</a>
+                    {% else %}
+                    <span class="text-danger">エラー: IDなし</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
