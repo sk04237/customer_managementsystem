@@ -42,28 +42,7 @@ def edit_customer(customer_id):
 
     return render_template('edit_customer.html', customer=customer)
 
-@main.route('/customers/<int:customer_id>/link_product', methods=['GET', 'POST'])
-def link_product(customer_id):
-    """顧客に商品を関連付ける"""
-    customer = Customer.query.get_or_404(customer_id)
-    products = Product.query.all()
 
-    if request.method == 'POST':
-        product_id = int(request.form['product_id'])
-        desired_price = float(request.form['desired_price'])
-
-        existing_entry = CustomerProduct.query.filter_by(customer_id=customer_id, product_id=product_id).first()
-        if existing_entry:
-            flash('この顧客にはすでにこの商品が関連付けられています。', 'warning')
-        else:
-            new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
-            db.session.add(new_link)
-            db.session.commit()
-            flash('商品を顧客に関連付けました', 'success')
-
-        return redirect(url_for('main.view_customers'))
-
-    return render_template('customer_product_link.html', customer=customer, products=products)
 
 @main.route('/customers_menu')
 def customers_menu():
