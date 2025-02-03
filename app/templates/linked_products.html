@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mt-4">{{ customer.name }} に関連付けられた商品</h2>
+
+    {% if linked_products %}
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>商品名</th>
+                <th>希望価格 (円)</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for linked_product in linked_products %}
+            <tr>
+                <td>{{ linked_product.product.name }}</td>
+                <td>{{ linked_product.desired_price }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('main.unlink_product', customer_id=customer.id, product_id=linked_product.product.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('本当に解除しますか？');">解除</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="mt-3 text-muted">関連付けられた商品はありません。</p>
+    {% endif %}
+
+    <a href="{{ url_for('main.view_customers') }}" class="btn btn-secondary mt-3">顧客一覧へ戻る</a>
+</div>
+{% endblock %}
