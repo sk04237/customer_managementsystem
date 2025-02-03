@@ -11,6 +11,7 @@ ADMIN_PASSWORD = "supervisor2024"
 # ==========================
 @main.route('/')
 def main_menu():
+    """メインメニューを表示"""
     return render_template('menu.html')
 
 # ==========================
@@ -18,119 +19,92 @@ def main_menu():
 # ==========================
 @main.route('/customers_menu')
 def customers_menu():
+    """顧客管理メニューを表示"""
     return render_template('customers_menu.html')
 
 @main.route('/customers')
 def view_customers():
+    """顧客一覧を表示"""
     customers = Customer.query.all()
     return render_template('view_customers.html', customers=customers)
 
-@main.route('/customers/import', methods=['GET', 'POST'])
-def import_customers():
+@main.route('/customers/add', methods=['GET', 'POST'])
+def add_customer():
+    """新規顧客を追加"""
     if request.method == 'POST':
-        file_path = "customers.txt"
-        if not os.path.exists(file_path):
-            flash('customers.txt が見つかりません', 'danger')
-            return redirect(url_for('main.customers_menu'))
-
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.startswith('#') or not line.strip():
-                        continue
-                    try:
-                        name, email, phone, *company = line.strip().split(',')
-                        company = company[0] if company else None
-                        if not Customer.query.filter_by(email=email).first():
-                            new_customer = Customer(name=name, email=email, phone=phone, company=company)
-                            db.session.add(new_customer)
-                    except ValueError:
-                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
-
-            db.session.commit()
-            flash('顧客情報をインポートしました', 'success')
-        except Exception as e:
-            flash(f'インポートエラー: {e}', 'danger')
-
-    return render_template('import_customers.html')
+        name = request.form['name']
+        email = request.form['email']
+        phone = request.form['phone']
+        company = request.form.get('company', None)
+        new_customer = Customer(name=name, email=email, phone=phone, company=company)
+        db.session.add(new_customer)
+        db.session.commit()
+        flash('顧客情報を追加しました', 'success')
+        return redirect(url_for('main.view_customers'))
+    
+    return render_template('add_customer.html')
 
 # ==========================
 # 商品管理メニュー
 # ==========================
 @main.route('/products_menu')
 def products_menu():
+    """商品管理メニューを表示"""
     return render_template('products_menu.html')
 
 @main.route('/products')
 def view_products():
+    """商品一覧を表示"""
     products = Product.query.all()
     return render_template('view_products.html', products=products)
 
-@main.route('/products/import', methods=['GET', 'POST'])
-def import_products():
+@main.route('/products/add', methods=['GET', 'POST'])
+def add_product():
+    """新規商品を追加"""
     if request.method == 'POST':
-        file_path = "goods.txt"
-        if not os.path.exists(file_path):
-            flash('goods.txt が見つかりません', 'danger')
-            return redirect(url_for('main.products_menu'))
-
-        try:
-            with open(file_path, 'r', encoding='utf-8') as file:
-                for line in file:
-                    if line.startswith('#') or not line.strip():
-                        continue
-                    try:
-                        name, price, discount_limit = line.strip().split(',')
-                        price = float(price)
-                        discount_limit = float(discount_limit) if discount_limit else 0
-                        if not Product.query.filter_by(name=name).first():
-                            new_product = Product(name=name, price=price, discount_limit=discount_limit)
-                            db.session.add(new_product)
-                    except ValueError:
-                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
-
-            db.session.commit()
-            flash('商品情報をインポートしました', 'success')
-        except Exception as e:
-            flash(f'インポートエラー: {e}', 'danger')
-
-    return render_template('import_products.html')
+        name = request.form['name']
+        price = float(request.form['price'])
+        discount_limit = float(request.form.get('discount_limit', 0))
+        new_product = Product(name=name, price=price, discount_limit=discount_limit)
+        db.session.add(new_product)
+        db.session.commit()
+        flash('商品を追加しました', 'success')
+        return redirect(url_for('main.view_products'))
+    
+    return render_template('add_product.html')
 
 # ==========================
 # 顧客と商品の関連付け
 # ==========================
-@main.route('/customer_product_link', methods=['GET', 'POST'])
-def customer_product_link():
-    customers = Customer.query.all()
+@main.route('/customers/<int:customer_id>/link_product', methods=['GET', 'POST'])
+def link_product(customer_id):
+    """顧客に商品を関連付ける"""
+    customer = Customer.query.get_or_404(customer_id)
     products = Product.query.all()
 
     if request.method == 'POST':
-        customer_id = request.form.get('customer_id')
-        product_id = request.form.get('product_id')
-        desired_price = request.form.get('desired_price')
-
-        if not customer_id or not product_id or not desired_price:
-            flash('すべての項目を入力してください', 'danger')
-            return redirect(url_for('main.customer_product_link'))
+        product_id = int(request.form['product_id'])
+        desired_price = float(request.form['desired_price'])
 
         existing_entry = CustomerProduct.query.filter_by(customer_id=customer_id, product_id=product_id).first()
         if existing_entry:
-            flash('この顧客と商品の関連はすでに存在します', 'warning')
-            return redirect(url_for('main.customer_product_link'))
+            flash('この顧客にはすでにこの商品が関連付けられています。', 'warning')
+        else:
+            new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
+            db.session.add(new_link)
+            db.session.commit()
+            flash('商品を顧客に関連付けました', 'success')
 
-        new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
-        db.session.add(new_link)
-        db.session.commit()
-        flash('顧客と商品を結びつけました', 'success')
-        return redirect(url_for('main.customer_product_link'))
+        return redirect(url_for('main.view_customers'))
 
-    return render_template('customer_product_link.html', customers=customers, products=products)
+    return render_template('customer_product_link.html', customer=customer, products=products)
 
 # ==========================
 # 限度額設定メニュー
 # ==========================
 @main.route('/discount_settings', methods=['GET', 'POST'])
 def discount_settings():
+    """割引限度額の設定（上司のみアクセス可能）"""
     if request.method == 'POST':
         password = request.form.get('password')
         if password == ADMIN_PASSWORD:
@@ -142,13 +116,14 @@ def discount_settings():
 
 @main.route('/set_discount', methods=['GET', 'POST'])
 def set_discount():
+    """割引限度額の設定ページ（認証済みユーザーのみ）"""
     if not session.get('admin'):
         flash('認証が必要です', 'danger')
         return redirect(url_for('main.discount_settings'))
 
     if request.method == 'POST':
         product_id = request.form.get('product_id')
-        new_discount_limit = request.form.get('discount_limit')
+        new_discount_limit = float(request.form.get('discount_limit'))
         product = Product.query.get(product_id)
         if product:
             product.discount_limit = new_discount_limit
