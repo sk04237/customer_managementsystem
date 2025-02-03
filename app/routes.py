@@ -44,6 +44,36 @@ def add_customer():
     
     return render_template('add_customer.html')
 
+@main.route('/customers/import', methods=['GET', 'POST'])
+def import_customers():
+    """顧客データを `customers.txt` からインポート"""
+    if request.method == 'POST':
+        file_path = "customers.txt"
+        if not os.path.exists(file_path):
+            flash('customers.txt が見つかりません', 'danger')
+            return redirect(url_for('main.customers_menu'))
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    if line.startswith('#') or not line.strip():
+                        continue
+                    try:
+                        name, email, phone, *company = line.strip().split(',')
+                        company = company[0] if company else None
+                        if not Customer.query.filter_by(email=email).first():
+                            new_customer = Customer(name=name, email=email, phone=phone, company=company)
+                            db.session.add(new_customer)
+                    except ValueError:
+                        flash(f'無効なフォーマット: {line.strip()}', 'danger')
+
+            db.session.commit()
+            flash('顧客情報をインポートしました', 'success')
+        except Exception as e:
+            flash(f'インポート中にエラーが発生しました: {e}', 'danger')
+
+    return render_template('import_customers.html')
+
 # ==========================
 # 商品管理メニュー
 # ==========================
