@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container">
     <h2 class="mt-4">顧客を追加</h2>
-    <form method="POST">
+    <form method="POST" class="needs-validation" novalidate>
         <div class="mb-3">
             <label for="name" class="form-label">名前</label>
             <input type="text" id="name" name="name" class="form-control" required>
@@ -17,6 +17,7 @@
             <input type="tel" id="phone" name="phone" class="form-control" required pattern="[0-9]{10,11}">
         </div>
         <button type="submit" class="btn btn-primary">追加</button>
+        <a href="javascript:history.back()" class="btn btn-secondary">戻る</a>
     </form>
 </div>
 {% endblock %}
