@@ -17,7 +17,7 @@
             <input type="number" id="discount_limit" name="discount_limit" class="form-control" required min="0" value="{{ product.discount_limit }}">
         </div>
         <button type="submit" class="btn btn-primary">更新</button>
-        <a href="{{ url_for('main.view_products') }}" class="btn btn-secondary">キャンセル</a>
+        <a href="javascript:history.back()" class="btn btn-secondary">戻る</a>
     </form>
 </div>
 {% endblock %}
