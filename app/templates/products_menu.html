@@ -4,12 +4,10 @@
 <div class="container">
     <h2 class="mt-4">商品管理メニュー</h2>
     <div class="list-group mt-3">
-        <a href="/products" class="list-group-item list-group-item-action">商品一覧</a>
-        <a href="/products/add" class="list-group-item list-group-item-action">商品追加</a>
-        <a href="/products" class="list-group-item list-group-item-action">商品編集</a>
-        <a href="/products" class="list-group-item list-group-item-action">商品削除</a>
-        <a href="{{ url_for('main.import_products') }}" class="list-group-item list-group-item-action">商品データのインポート</a> <!-- 追加部分 -->
-        <a href="/" class="list-group-item list-group-item-action text-danger">メインメニューへ戻る</a>
+        <a href="{{ url_for('main.view_products') }}" class="list-group-item list-group-item-action">商品一覧</a>
+        <a href="{{ url_for('main.add_product') }}" class="list-group-item list-group-item-action">商品追加</a>
+        <a href="{{ url_for('main.import_products') }}" class="list-group-item list-group-item-action">商品データのインポート</a>
     </div>
+    <a href="javascript:history.back()" class="btn btn-secondary mt-3">戻る</a>
 </div>
 {% endblock %}
