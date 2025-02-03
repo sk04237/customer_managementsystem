@@ -25,7 +25,7 @@ def customers_menu():
 @main.route('/customers')
 def view_customers():
     """顧客一覧を表示"""
-    customers = Customer.query.all()
+    customers = Customer.query.all()  # ← データベースから全顧客を取得
     return render_template('view_customers.html', customers=customers)
 
 @main.route('/customers/add', methods=['GET', 'POST'])
