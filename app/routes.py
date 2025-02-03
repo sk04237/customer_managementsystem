@@ -126,6 +126,28 @@ def import_customers():
 
     return render_template('import_customers.html')
 
+@main.route('/customers/<int:customer_id>/linked_products')
+def linked_products(customer_id):
+    """顧客に関連付けられた商品の一覧を表示"""
+    customer = Customer.query.get_or_404(customer_id)
+    linked_products = CustomerProduct.query.filter_by(customer_id=customer_id).all()
+
+    return render_template('linked_products.html', customer=customer, linked_products=linked_products)
+
+@main.route('/customers/<int:customer_id>/unlink_product/<int:product_id>', methods=['POST'])
+def unlink_product(customer_id, product_id):
+    """顧客に関連付けられた商品を解除"""
+    linked_product = CustomerProduct.query.filter_by(customer_id=customer_id, product_id=product_id).first()
+    if linked_product:
+        db.session.delete(linked_product)
+        db.session.commit()
+        flash('関連付けを削除しました', 'success')
+    else:
+        flash('関連付けが見つかりません', 'danger')
+
+    return redirect(url_for('main.linked_products', customer_id=customer_id))
+
+
 # ==========================
 # 商品管理メニュー
 # ==========================
