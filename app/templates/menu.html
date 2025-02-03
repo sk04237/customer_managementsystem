@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container text-center">
+<div class="container">
     <h2 class="mt-4">メインメニュー</h2>
     <div class="list-group mt-3">
-        <a href="{{ url_for('main.view_customers') }}" class="list-group-item list-group-item-action">顧客管理</a>
-        <a href="{{ url_for('main.view_products') }}" class="list-group-item list-group-item-action">商品管理</a>
-        <a href="{{ url_for('main.discount_settings') }}" class="list-group-item list-group-item-action">割引設定</a>
+        <a href="{{ url_for('main.customers_menu') }}" class="list-group-item list-group-item-action">顧客管理メニュー</a>
+        <a href="{{ url_for('main.products_menu') }}" class="list-group-item list-group-item-action">商品管理メニュー</a>
+        <a href="{{ url_for('main.discount_settings') }}" class="list-group-item list-group-item-action">限度額設定メニュー</a>
     </div>
 </div>
 {% endblock %}
