@@ -76,6 +76,31 @@ def view_customers():
     customers = Customer.query.all()  # ← データベースから全顧客を取得
     return render_template('view_customers.html', customers=customers)
 
+@main.route('/customers/<int:customer_id>/link_product', methods=['GET', 'POST'])
+def link_product(customer_id):
+    """顧客に商品を関連付ける"""
+    customer = Customer.query.get_or_404(customer_id)  # ← 顧客が存在しない場合はエラー
+    products = Product.query.all()  # ← すべての商品を取得
+
+    if request.method == 'POST':
+        product_id = int(request.form['product_id'])
+        desired_price = float(request.form['desired_price'])
+
+        # すでに登録されていないか確認
+        existing_entry = CustomerProduct.query.filter_by(customer_id=customer_id, product_id=product_id).first()
+        if existing_entry:
+            flash('この顧客にはすでにこの商品が関連付けられています。', 'warning')
+        else:
+            new_link = CustomerProduct(customer_id=customer_id, product_id=product_id, desired_price=desired_price)
+            db.session.add(new_link)
+            db.session.commit()
+            flash('商品を顧客に関連付けました', 'success')
+
+        return redirect(url_for('main.view_customers'))
+
+    return render_template('customer_product_link.html', customer=customer, products=products)
+
+
 @main.route('/customers/add', methods=['GET', 'POST'])
 def add_customer():
     """新規顧客を追加"""
