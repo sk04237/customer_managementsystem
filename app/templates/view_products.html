@@ -19,10 +19,14 @@
                 <td>{{ product.price }}</td>
                 <td>{{ product.discount_limit }}</td>
                 <td>
+                    {% if product.id %}
                     <a href="{{ url_for('main.edit_product', product_id=product.id) }}" class="btn btn-warning btn-sm">編集</a>
                     <form method="POST" action="{{ url_for('main.delete_product', product_id=product.id) }}" style="display:inline;">
                         <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('本当に削除しますか？');">削除</button>
                     </form>
+                    {% else %}
+                    <span class="text-danger">エラー: IDなし</span>
+                    {% endif %}
                 </td>
             </tr>
             {% endfor %}
@@ -30,3 +34,4 @@
     </table>
 </div>
 {% endblock %}
+
