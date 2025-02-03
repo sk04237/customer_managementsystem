@@ -17,6 +17,22 @@ def main_menu():
 # ==========================
 # 顧客管理メニュー
 # ==========================
+@main.route('/customers/edit/<int:customer_id>', methods=['GET', 'POST'])
+def edit_customer(customer_id):
+    """顧客情報を編集"""
+    customer = Customer.query.get_or_404(customer_id)
+
+    if request.method == 'POST':
+        customer.name = request.form['name']
+        customer.email = request.form['email']
+        customer.phone = request.form['phone']
+        customer.company = request.form.get('company', None)
+        db.session.commit()
+        flash('顧客情報を更新しました', 'success')
+        return redirect(url_for('main.view_customers'))
+
+    return render_template('edit_customer.html', customer=customer)
+
 @main.route('/customers/<int:customer_id>/link_product', methods=['GET', 'POST'])
 def link_product(customer_id):
     """顧客に商品を関連付ける"""
