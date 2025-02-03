@@ -1,162 +1,177 @@
-# 顧客・商品管理システム
+# 顧客管理システム（Customer Management System）
 
-## 概要
-このシステムは、顧客と商品を管理し、取引先の希望価格や割引限度額を管理するためのWebアプリケーションです。
+このプロジェクトは、顧客情報と取扱商品を管理し、顧客と商品の関連付け、割引限度額の設定を可能にするシステムです。
 
-### 主な機能
-- 顧客情報の管理（追加、編集、削除、一覧表示、検索）
-- 商品情報の管理（追加、編集、削除、一覧表示）
-- 顧客と商品の関連付け（希望価格の登録）
-- `customers.txt` および `goods.txt` のデータ入出力
-- 上司のみがアクセス可能な割引限度額設定ページ（パスワード認証）
-- REST API によるデータ取得
+---
 
-## 動作環境
-| 項目        | 詳細 |
-|------------|--------------------------------|
-| OS         | Windows / macOS / Linux |
-| Python     | 3.8 以上 |
-| フレームワーク | Flask |
-| データベース | SQLite |
-| 依存ライブラリ | Flask, Flask-SQLAlchemy, Redis（任意） |
+## **機能概要**
+- **顧客管理**
+  - `customers.txt` から顧客情報をインポート
+  - 顧客一覧の表示
+  - 新規顧客の登録
+- **商品管理**
+  - `goods.txt` から商品情報をインポート
+  - 商品一覧の表示
+  - 新規商品の登録
+- **顧客と商品の関連付け**
+  - 顧客が希望価格を入力し、商品との関連付けを行う
+  - 既存の関連付けを防止
+- **割引限度額の設定（管理者のみ）**
+  - 管理者パスワードによる認証
+  - 各商品の割引限度額を設定
 
-## セットアップ手順
-### 仮想環境の作成（推奨）
+---
+
+## **動作環境**
+- Python 3.9 以上
+- Flask
+- SQLite3
+- Jinja2
+
+---
+
+## **セットアップ手順**
+
+### **1. 仮想環境を作成**
 ```sh
-python -m venv venv
-source venv/bin/activate  # macOS / Linux
-venv\Scripts\activate     # Windows
+python3 -m venv venv
 ```
 
-### 必要なパッケージのインストール
+### **2. 仮想環境を有効化**
+Windows:
+```sh
+venv\Scripts\activate
+```
+Mac/Linux:
+```sh
+source venv/bin/activate
+```
+
+### **3. 必要なパッケージをインストール**
 ```sh
 pip install -r requirements.txt
 ```
 
-### データベースの作成
+### **4. データベースの作成**
 ```sh
-python app.py
+python run.py
 ```
 
-### アプリケーションの起動
+---
+
+## **実行方法**
+仮想環境を有効化した状態で以下のコマンドを実行
 ```sh
-python app.py
+python run.py
 ```
+アプリが起動し、ブラウザで `http://127.0.0.1:5000/` にアクセスすることで利用できます。
 
-### Webブラウザでのアクセス
-```
-http://127.0.0.1:5000
-```
+---
 
-## 使用方法
-### メインメニュー
-| メニュー | 説明 |
-|---------|----------------------------------|
-| 顧客管理 | 顧客の追加、編集、削除、一覧表示、検索 |
-| 商品管理 | 商品の追加、編集、削除、一覧表示 |
-| 割引限度額設定 | 上司のみがアクセスできるページ（パスワード認証） |
-
-### 顧客管理
+## **使用方法**
+### **1. 顧客管理**
 | URL | 機能 |
-|-----|------|
-| `/customers` | 顧客一覧を表示 |
-| `/customers/add` | 顧客を追加 |
-| `/customers/edit/<id>` | 顧客情報を編集 |
-| `/customers/delete/<id>` | 顧客を削除 |
-| `/customers/import` | `customers.txt` からデータをインポート |
+| --- | --- |
+| `/customers` | 顧客一覧の表示 |
+| `/customers/import` | `customers.txt` から顧客情報をインポート |
+| `/customers/add` | 新規顧客の登録 |
 
-#### `customers.txt` のフォーマット
-```
-# 名前,メール,電話番号,会社
-山田 太郎,yamada@example.com,08012345678,株式会社A
-鈴木 一郎,suzuki@example.com,09087654321,株式会社B
-```
-
-### 商品管理
+### **2. 商品管理**
 | URL | 機能 |
-|-----|------|
-| `/products` | 商品一覧を表示 |
-| `/products/add` | 商品を追加 |
-| `/products/edit/<id>` | 商品情報を編集 |
-| `/products/delete/<id>` | 商品を削除 |
-| `/products/import` | `goods.txt` からデータをインポート |
+| --- | --- |
+| `/products` | 商品一覧の表示 |
+| `/products/import` | `goods.txt` から商品情報をインポート |
+| `/products/add` | 新規商品の登録 |
 
-#### `goods.txt` のフォーマット
-```
-# 商品名,価格,割引限度額
-ノートPC,120000,10000
-スマートフォン,80000,5000
-```
-
-### 顧客と商品の関連付け
+### **3. 顧客と商品の関連付け**
 | URL | 機能 |
-|-----|------|
-| `/customer_product_link` | 顧客と商品を紐づけ、希望価格を登録 |
+| --- | --- |
+| `/customer_product_link` | 顧客と商品の関連付け（希望価格を設定） |
 
-### 割引限度額設定（上司のみ）
+### **4. 割引限度額の設定（管理者専用）**
 | URL | 機能 |
-|-----|------|
-| `/discount_settings` | パスワード認証で管理ページへ |
-| `/set_discount` | 商品ごとの割引限度額を設定 |
+| --- | --- |
+| `/discount_settings` | 管理者パスワードを入力し、設定ページに移動 |
+| `/set_discount` | 各商品の割引限度額を設定 |
 
-#### パスワード（デフォルト設定）
+---
+
+## **データフォーマット**
+### **1. `customers.txt`（顧客情報）**
+```txt
+名前,メールアドレス,電話番号,会社名（任意）
+田中太郎,tanaka@example.com,09012345678,ABC商事
+山田花子,yamada@example.com,08098765432,
+```
+**注意:** 会社名がない場合はカンマの後を空白にする。
+
+### **2. `goods.txt`（商品情報）**
+```txt
+商品名,価格,割引限度額
+ノートPC,100000,5000
+スマートフォン,80000,3000
+```
+**注意:** 割引限度額が不要な場合は `0` を入力。
+
+---
+
+## **管理者パスワード**
+限度額設定機能を利用するためには、管理者パスワードを入力する必要があります。
+デフォルトの管理者パスワードは以下の通りです。
+
 ```
 supervisor2024
 ```
 
-## REST API
-### 顧客一覧
-```http
-GET /api/customers
-```
-#### レスポンス例
-```json
-[
-    {"id": 1, "name": "山田 太郎", "email": "yamada@example.com", "phone": "08012345678", "company": "株式会社A"},
-    {"id": 2, "name": "鈴木 一郎", "email": "suzuki@example.com", "phone": "09087654321", "company": "株式会社B"}
-]
+パスワードを変更したい場合は `routes.py` の以下の部分を編集してください。
+
+```python
+ADMIN_PASSWORD = "変更したいパスワード"
 ```
 
-### 商品一覧
-```http
-GET /api/products
-```
-#### レスポンス例
-```json
-[
-    {"id": 1, "name": "ノートPC", "price": 120000, "discount_limit": 10000},
-    {"id": 2, "name": "スマートフォン", "price": 80000, "discount_limit": 5000}
-]
-```
+---
 
-### 顧客の希望価格リスト
-```http
-GET /api/customer_requests
+## **ファイル構成**
 ```
-#### レスポンス例
-```json
-[
-    {"customer": "山田 太郎", "product": "ノートPC", "desired_price": 110000},
-    {"customer": "鈴木 一郎", "product": "スマートフォン", "desired_price": 75000}
-]
-```
-
-## 注意点
-- 割引限度額の設定は上司のみ可能（パスワード認証あり）
-- データのインポートは `.txt` ファイルを UTF-8 で保存すること
-- サーバーを外部公開する場合は `SECRET_KEY` を変更すること
-
-## コード構成
-```
-/
-│── app.py              # メインアプリケーション
-│── models.py           # データベースモデル
-│── templates/          # HTMLテンプレート
-│── static/             # CSS・JSファイル
-│── customers.txt       # 顧客データ
-│── goods.txt           # 商品データ
+/customer_managementsystem/
+│── run.py              # アプリケーションのエントリーポイント
 │── requirements.txt    # 必要ライブラリ一覧
-│── README.md           # このファイル
+│── README.md           # 説明書
+│── customers.txt       # 顧客データファイル
+│── goods.txt           # 商品データファイル
+│
+├── app/                # アプリケーション本体
+│   │── __init__.py     # Flaskアプリの初期化
+│   │── models.py       # データベースモデル
+│   │── routes.py       # ルーティング設定
+│   │── config.py       # 設定ファイル
+│   │── templates/      # HTMLテンプレート
+│   │── static/         # 静的ファイル（CSS, JavaScript）
+│
+├── venv/               # 仮想環境（Pythonの依存関係を管理）
+│
+└── instance/           # SQLiteデータベースファイル
 ```
 
+---
 
+## **トラブルシューティング**
+### **1. `ModuleNotFoundError` が発生する**
+```sh
+pip install -r requirements.txt
+```
+
+### **2. `sqlite3.OperationalError: unable to open database file`**
+```sh
+mkdir instance
+python run.py
+```
+
+### **3. `Not Found` エラーが発生する**
+```python
+from app import create_app
+app = create_app()
+print(app.url_map)
+```
+
+---
