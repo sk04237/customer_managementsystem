@@ -1,4 +1,3 @@
-
 {% extends "base.html" %}
 
 {% block content %}
@@ -9,6 +8,7 @@
         <a href="/products/add" class="list-group-item list-group-item-action">商品追加</a>
         <a href="/products" class="list-group-item list-group-item-action">商品編集</a>
         <a href="/products" class="list-group-item list-group-item-action">商品削除</a>
+        <a href="{{ url_for('main.import_products') }}" class="list-group-item list-group-item-action">商品データのインポート</a> <!-- 追加部分 -->
         <a href="/" class="list-group-item list-group-item-action text-danger">メインメニューへ戻る</a>
     </div>
 </div>
