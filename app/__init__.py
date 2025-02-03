@@ -2,11 +2,11 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from app.config import Config
 
-# グローバルな SQLAlchemy インスタンスを作成
+# SQLAlchemyのインスタンスを作成
 db = SQLAlchemy()
 
 def create_app():
-    """Flask アプリケーションを作成し、設定・データベースを初期化する"""
+    """Flask アプリケーションを作成"""
     app = Flask(__name__)
 
     # 設定を適用
@@ -15,16 +15,12 @@ def create_app():
     # データベースの初期化
     db.init_app(app)
 
-    # Blueprint の登録
+    # Blueprintの登録
     from app.routes import main
     app.register_blueprint(main)
 
-    # データベースを作成（エラーハンドリング付き）
+    # データベースを作成
     with app.app_context():
-        try:
-            db.create_all()
-            print("Database initialized successfully.")
-        except Exception as e:
-            print(f"Database initialization failed: {e}")
+        db.create_all()
 
     return app
