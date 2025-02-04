@@ -12,11 +12,8 @@
             <label for="price" class="form-label">価格 (円)</label>
             <input type="number" id="price" name="price" class="form-control" required min="1" value="{{ product.price }}">
         </div>
-        <div class="mb-3">
-            <label for="discount_limit" class="form-label">割引限度額 (円)</label>
-            <input type="number" id="discount_limit" name="discount_limit" class="form-control" required min="0" value="{{ product.discount_limit }}">
-        </div>
-        <button type="submit" class="btn btn-primary">更新</button>
+
+        <button type="submit" class="btn btn-primary">保存</button>
         <a href="javascript:history.back()" class="btn btn-secondary">戻る</a>
     </form>
 </div>
